@@ -39,6 +39,12 @@ const defaultFinancialProfile: FinancialProfile = {
   expectedInvestmentReturn: 7,
   savingsRate: 50,
   annualRaisePercent: 2,
+  nonInvestedSavingsRate: 0,  // Default: all savings invested (preserves current behavior)
+  nonInvestedReturnRate: 2,   // Default: 2% HISA rate
+  includeTaxes: false,        // Default: taxes disabled (preserves current behavior)
+  province: 'ON',             // Default: Ontario
+  incomeType: 'single',       // Default: single income household
+  secondaryIncome: 0,         // Default: no secondary income
 };
 
 const defaultRentScenario: RentScenario = {

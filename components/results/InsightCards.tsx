@@ -151,10 +151,17 @@ export function InsightCards() {
               </>
             )
           ) : (
-            <>
-              Buying the {buyScenario.name} is better than renting from day one.
-              You'll be {formatCurrency(difference)} ahead after {timeframe} years.
-            </>
+            breakeven?.timeBreakeven && breakeven.timeBreakeven.exact > 0 ? (
+              <>
+                After {formatYears(breakeven.timeBreakeven.exact, false)}, buying the {buyScenario.name}
+                becomes better than renting. You'll be {formatCurrency(difference)} ahead after {timeframe} years.
+              </>
+            ) : (
+              <>
+                Buying the {buyScenario.name} is better than renting from day one.
+                You'll be {formatCurrency(difference)} ahead after {timeframe} years.
+              </>
+            )
           )}
         </p>
       </div>

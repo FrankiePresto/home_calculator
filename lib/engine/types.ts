@@ -14,6 +14,18 @@ export interface FinancialProfile {
   expectedInvestmentReturn: number;   // Annual % (default: 7%)
   savingsRate: number;                // % of discretionary income invested (0-100)
   annualRaisePercent: number;         // Expected annual income growth (default: 2%)
+
+  // Non-invested savings (P4: HISA/emergency fund)
+  nonInvestedSavingsRate: number;     // % of savings NOT invested (0-100)
+  nonInvestedReturnRate: number;      // Return rate for HISA (default: 2%)
+
+  // Tax settings (P6: Canadian tax calculator)
+  includeTaxes: boolean;              // Toggle tax calculations
+  province: string;                   // 'BC', 'ON', 'AB' (default: 'ON')
+
+  // Dual income support
+  incomeType: 'single' | 'dual';      // Single or dual income household
+  secondaryIncome: number;            // Second earner's annual gross income
 }
 
 // =============================================================================
@@ -87,6 +99,13 @@ export interface LifeEvent {
   // For income changes
   newAnnualIncome?: number;           // New income level
   percentChange?: number;             // +15% = promotion
+
+  // For income change duration (P2: Phase income changes)
+  incomeChangeDuration?: 'ongoing' | 'phase';  // ongoing (permanent) or phase (temporary)
+  incomeMultiplier?: number;          // For phase: 0.5 = 50% of normal income
+
+  // For dual income households - which earner is affected
+  affectedEarner?: 'primary' | 'secondary';  // Default: 'primary'
 }
 
 // =============================================================================
@@ -125,12 +144,13 @@ export interface YearlySnapshot {
 
   // Wealth Components
   investmentPortfolio: number;
+  nonInvestedSavingsBalance: number;  // Cumulative non-invested savings (HISA/emergency fund)
   homeValue: number;                  // 0 for rent scenario
   mortgageBalance: number;            // 0 for rent scenario
   homeEquity: number;                 // homeValue - mortgageBalance
 
   // Totals
-  netWorth: number;                   // portfolio + equity
+  netWorth: number;                   // portfolio + nonInvestedSavings + equity
 
   // Cash Flow Categories (for Sankey)
   cashFlow: CashFlowBreakdown;
@@ -202,4 +222,31 @@ export interface LifeEventImpact {
   monthlyAdjustment: number;
   incomeOverride: number | null;
   incomePercentChange: number | null;
+  incomeMultiplier: number | null;    // For phase-based income changes (e.g., 0.5 = 50%)
+  // For dual income - track impacts per earner
+  primaryIncomeMultiplier: number | null;
+  secondaryIncomeMultiplier: number | null;
+  primaryIncomeOverride: number | null;
+  secondaryIncomeOverride: number | null;
+  primaryIncomePercentChange: number | null;
+  secondaryIncomePercentChange: number | null;
+}
+
+// =============================================================================
+// Feasibility Warnings
+// =============================================================================
+
+export type FeasibilityWarningType =
+  | 'negative_discretionary'
+  | 'insufficient_savings'
+  | 'mortgage_stress';
+
+export type FeasibilityWarningSeverity = 'warning' | 'critical';
+
+export interface FeasibilityWarning {
+  type: FeasibilityWarningType;
+  year: number;
+  severity: FeasibilityWarningSeverity;
+  message: string;
+  scenario: 'rent' | 'buy';
 }

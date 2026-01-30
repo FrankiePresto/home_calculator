@@ -30,6 +30,58 @@ import {
 } from './mortgage';
 
 import { growPortfolio } from './investment';
+import { calculateNetIncome, calculateHouseholdTax, Province } from './taxes';
+
+/**
+ * Calculate effective household income after applying life events and taxes
+ * Handles both single and dual income households with per-earner life events
+ */
+function calculateEffectiveHouseholdIncome(
+  primaryGross: number,
+  secondaryGross: number,
+  lifeEventImpact: LifeEventImpact,
+  profile: FinancialProfile
+): { effectivePrimary: number; effectiveSecondary: number; totalNet: number } {
+  // Apply life event impacts to each earner
+  let effectivePrimary = primaryGross;
+  let effectiveSecondary = secondaryGross;
+
+  // Primary income adjustments
+  if (lifeEventImpact.primaryIncomeOverride !== null) {
+    effectivePrimary = lifeEventImpact.primaryIncomeOverride;
+  } else if (lifeEventImpact.primaryIncomePercentChange !== null) {
+    effectivePrimary *= 1 + lifeEventImpact.primaryIncomePercentChange / 100;
+  }
+  if (lifeEventImpact.primaryIncomeMultiplier !== null) {
+    effectivePrimary *= lifeEventImpact.primaryIncomeMultiplier;
+  }
+
+  // Secondary income adjustments
+  if (lifeEventImpact.secondaryIncomeOverride !== null) {
+    effectiveSecondary = lifeEventImpact.secondaryIncomeOverride;
+  } else if (lifeEventImpact.secondaryIncomePercentChange !== null) {
+    effectiveSecondary *= 1 + lifeEventImpact.secondaryIncomePercentChange / 100;
+  }
+  if (lifeEventImpact.secondaryIncomeMultiplier !== null) {
+    effectiveSecondary *= lifeEventImpact.secondaryIncomeMultiplier;
+  }
+
+  // Calculate net income after taxes
+  let totalNet: number;
+  if (!profile.includeTaxes) {
+    totalNet = effectivePrimary + effectiveSecondary;
+  } else {
+    const province = (profile.province || 'ON') as Province;
+    if (profile.incomeType === 'dual' && effectiveSecondary > 0) {
+      const householdTax = calculateHouseholdTax(effectivePrimary, effectiveSecondary, province);
+      totalNet = householdTax.netIncome;
+    } else {
+      totalNet = calculateNetIncome(effectivePrimary, province);
+    }
+  }
+
+  return { effectivePrimary, effectiveSecondary, totalNet };
+}
 
 /**
  * Process life events for a given year and return their financial impact
@@ -43,6 +95,15 @@ export function processLifeEvents(
   let monthlyAdjustment = 0;
   let incomeOverride: number | null = null;
   let incomePercentChange: number | null = null;
+  let incomeMultiplier: number | null = null;
+
+  // Per-earner tracking for dual income households
+  let primaryIncomeMultiplier: number | null = null;
+  let secondaryIncomeMultiplier: number | null = null;
+  let primaryIncomeOverride: number | null = null;
+  let secondaryIncomeOverride: number | null = null;
+  let primaryIncomePercentChange: number | null = null;
+  let secondaryIncomePercentChange: number | null = null;
 
   for (const event of events) {
     switch (event.type) {
@@ -71,18 +132,62 @@ export function processLifeEvents(
         break;
 
       case 'income-change':
-        if (event.year === currentYear) {
-          if (event.newAnnualIncome !== undefined) {
-            incomeOverride = event.newAnnualIncome;
-          } else if (event.percentChange !== undefined) {
-            incomePercentChange = event.percentChange;
+        const earner = event.affectedEarner || 'primary';
+
+        // Handle phase-based income changes (temporary reduction like sabbatical/mat leave)
+        if (event.incomeChangeDuration === 'phase') {
+          if (
+            event.startYear &&
+            event.endYear &&
+            currentYear >= event.startYear &&
+            currentYear <= event.endYear &&
+            event.incomeMultiplier !== undefined
+          ) {
+            if (earner === 'secondary') {
+              secondaryIncomeMultiplier = event.incomeMultiplier;
+            } else {
+              primaryIncomeMultiplier = event.incomeMultiplier;
+            }
+            // Legacy field for backward compatibility
+            incomeMultiplier = event.incomeMultiplier;
+          }
+        } else {
+          // Ongoing (permanent) income change
+          if (event.year === currentYear) {
+            if (event.newAnnualIncome !== undefined) {
+              if (earner === 'secondary') {
+                secondaryIncomeOverride = event.newAnnualIncome;
+              } else {
+                primaryIncomeOverride = event.newAnnualIncome;
+              }
+              incomeOverride = event.newAnnualIncome;
+            } else if (event.percentChange !== undefined) {
+              if (earner === 'secondary') {
+                secondaryIncomePercentChange = event.percentChange;
+              } else {
+                primaryIncomePercentChange = event.percentChange;
+              }
+              incomePercentChange = event.percentChange;
+            }
           }
         }
         break;
     }
   }
 
-  return { oneTimeExpenses, monthlyAdjustment, incomeOverride, incomePercentChange };
+  return {
+    oneTimeExpenses,
+    monthlyAdjustment,
+    incomeOverride,
+    incomePercentChange,
+    incomeMultiplier,
+    primaryIncomeMultiplier,
+    secondaryIncomeMultiplier,
+    primaryIncomeOverride,
+    secondaryIncomeOverride,
+    primaryIncomePercentChange,
+    secondaryIncomePercentChange,
+  };
 }
 
 /**
@@ -112,7 +217,8 @@ function createYear0Snapshot(
   profile: FinancialProfile,
   investmentPortfolio: number,
   homeValue: number,
-  mortgageBalance: number
+  mortgageBalance: number,
+  nonInvestedSavingsBalance: number = 0
 ): YearlySnapshot {
   const homeEquity = homeValue - mortgageBalance;
 
@@ -125,10 +231,11 @@ function createYear0Snapshot(
     monthlyDiscretionary: 0,
     monthlySavings: 0,
     investmentPortfolio,
+    nonInvestedSavingsBalance,
     homeValue,
     mortgageBalance,
     homeEquity,
-    netWorth: investmentPortfolio + homeEquity,
+    netWorth: investmentPortfolio + nonInvestedSavingsBalance + homeEquity,
     cashFlow: createEmptyCashFlow(),
   };
 }
@@ -146,34 +253,43 @@ export function projectRentScenario(
 
   // Initialize Year 0 - Full portfolio remains invested
   let portfolio = profile.currentInvestmentPortfolio;
-  let currentIncome = profile.annualGrossIncome;
+  let nonInvestedSavings = 0; // Starts at 0 for rent scenario
+
+  // Track both incomes separately for dual income households
+  let currentPrimaryIncome = profile.annualGrossIncome;
+  let currentSecondaryIncome = profile.incomeType === 'dual' ? (profile.secondaryIncome || 0) : 0;
   let currentRent = scenario.monthlyRent;
 
   snapshots.push(
-    createYear0Snapshot(profile, portfolio, 0, 0)
+    createYear0Snapshot(profile, portfolio, 0, 0, nonInvestedSavings)
   );
 
   // Project Year 1 through Year N
   for (let year = 1; year <= timeframeYears; year++) {
     // 1. Apply income growth (except Year 1)
     if (year > 1) {
-      currentIncome *= 1 + profile.annualRaisePercent / 100;
+      currentPrimaryIncome *= 1 + profile.annualRaisePercent / 100;
+      currentSecondaryIncome *= 1 + profile.annualRaisePercent / 100;
     }
 
     // 2. Process life events
-    const lifeEventImpact = processLifeEvents(lifeEvents, year, currentIncome);
+    const lifeEventImpact = processLifeEvents(lifeEvents, year, currentPrimaryIncome);
 
-    if (lifeEventImpact.incomeOverride !== null) {
-      currentIncome = lifeEventImpact.incomeOverride;
-    } else if (lifeEventImpact.incomePercentChange !== null) {
-      currentIncome *= 1 + lifeEventImpact.incomePercentChange / 100;
-    }
+    // 3. Calculate effective income for each earner after life events and taxes
+    const incomeResult = calculateEffectiveHouseholdIncome(
+      currentPrimaryIncome,
+      currentSecondaryIncome,
+      lifeEventImpact,
+      profile
+    );
+
+    const netAnnualIncome = incomeResult.totalNet;
 
     // 3. Calculate monthly housing cost
     const monthlyHousingCost = currentRent + scenario.rentersInsurance;
 
-    // 4. Calculate discretionary income
-    const monthlyIncome = currentIncome / 12;
+    // 4. Calculate discretionary income (use net income for actual cash flow)
+    const monthlyIncome = netAnnualIncome / 12;
     const monthlyLifeEventAdjustment = Math.abs(lifeEventImpact.monthlyAdjustment);
     const totalMonthlyExpenses =
       monthlyHousingCost +
@@ -185,19 +301,40 @@ export function projectRentScenario(
       monthlyDiscretionary * (profile.savingsRate / 100)
     );
 
-    // 5. Grow portfolio through the year
+    // 5. Split savings between invested and non-invested
+    const nonInvestedRate = profile.nonInvestedSavingsRate || 0;
+    const monthlyNonInvestedSavings = monthlySavings * (nonInvestedRate / 100);
+    const monthlyInvestedSavings = monthlySavings - monthlyNonInvestedSavings;
+
+    // 6. Grow portfolio (invested savings) through the year
     portfolio = growPortfolio(
       portfolio,
-      monthlySavings,
+      monthlyInvestedSavings,
       profile.expectedInvestmentReturn
     );
 
-    // 6. Apply one-time expenses (deduct from portfolio)
-    portfolio = Math.max(0, portfolio - lifeEventImpact.oneTimeExpenses);
+    // 7. Grow non-invested savings (HISA) through the year
+    const hisaRate = profile.nonInvestedReturnRate || 2;
+    nonInvestedSavings = growPortfolio(
+      nonInvestedSavings,
+      monthlyNonInvestedSavings,
+      hisaRate
+    );
 
-    // 7. Build cash flow breakdown
+    // 8. Apply one-time expenses (deduct from portfolio first, then non-invested)
+    let remainingExpense = lifeEventImpact.oneTimeExpenses;
+    if (remainingExpense > 0) {
+      const fromPortfolio = Math.min(portfolio, remainingExpense);
+      portfolio = Math.max(0, portfolio - fromPortfolio);
+      remainingExpense -= fromPortfolio;
+      if (remainingExpense > 0) {
+        nonInvestedSavings = Math.max(0, nonInvestedSavings - remainingExpense);
+      }
+    }
+
+    // 9. Build cash flow breakdown (use net income for accurate reporting)
     const cashFlow: CashFlowBreakdown = {
-      income: currentIncome,
+      income: netAnnualIncome,
       toRent: currentRent * 12,
       toMortgageInterest: 0,
       toMortgagePrincipal: 0,
@@ -212,24 +349,25 @@ export function projectRentScenario(
       toInvestments: monthlySavings * 12,
     };
 
-    // 8. Record snapshot
+    // 10. Record snapshot (use net income for actual year's income)
     snapshots.push({
       year,
-      annualIncome: currentIncome,
+      annualIncome: netAnnualIncome,
       monthlyHousingCost,
       monthlyNonHousingExpenses: profile.monthlyNonHousingExpenses,
       monthlyLifeEventAdjustment,
       monthlyDiscretionary,
       monthlySavings,
       investmentPortfolio: portfolio,
+      nonInvestedSavingsBalance: nonInvestedSavings,
       homeValue: 0,
       mortgageBalance: 0,
       homeEquity: 0,
-      netWorth: portfolio,
+      netWorth: portfolio + nonInvestedSavings,
       cashFlow,
     });
 
-    // 9. Increase rent for next year
+    // 11. Increase rent for next year
     currentRent *= 1 + scenario.annualRentIncrease / 100;
   }
 
@@ -264,31 +402,40 @@ export function projectBuyScenario(
     0,
     profile.currentInvestmentPortfolio - downPayment - closingCosts
   );
+  let nonInvestedSavings = 0; // Starts at 0 for buy scenario
   let homeValue = scenario.purchasePrice;
   let mortgageBalance = totalLoan;
-  let currentIncome = profile.annualGrossIncome;
+
+  // Track both incomes separately for dual income households
+  let currentPrimaryIncome = profile.annualGrossIncome;
+  let currentSecondaryIncome = profile.incomeType === 'dual' ? (profile.secondaryIncome || 0) : 0;
 
   snapshots.push(
-    createYear0Snapshot(profile, portfolio, homeValue, mortgageBalance)
+    createYear0Snapshot(profile, portfolio, homeValue, mortgageBalance, nonInvestedSavings)
   );
 
   // Project Year 1 through Year N
   for (let year = 1; year <= timeframeYears; year++) {
     // 1. Apply income growth (except Year 1)
     if (year > 1) {
-      currentIncome *= 1 + profile.annualRaisePercent / 100;
+      currentPrimaryIncome *= 1 + profile.annualRaisePercent / 100;
+      currentSecondaryIncome *= 1 + profile.annualRaisePercent / 100;
     }
 
     // 2. Process life events
-    const lifeEventImpact = processLifeEvents(lifeEvents, year, currentIncome);
+    const lifeEventImpact = processLifeEvents(lifeEvents, year, currentPrimaryIncome);
 
-    if (lifeEventImpact.incomeOverride !== null) {
-      currentIncome = lifeEventImpact.incomeOverride;
-    } else if (lifeEventImpact.incomePercentChange !== null) {
-      currentIncome *= 1 + lifeEventImpact.incomePercentChange / 100;
-    }
+    // 3. Calculate effective income for each earner after life events and taxes
+    const incomeResult = calculateEffectiveHouseholdIncome(
+      currentPrimaryIncome,
+      currentSecondaryIncome,
+      lifeEventImpact,
+      profile
+    );
 
-    // 3. Calculate mortgage payment and breakdown
+    const netAnnualIncome = incomeResult.totalNet;
+
+    // 4. Calculate mortgage payment and breakdown
     const rate = getRateForYear(
       scenario.interestRate,
       scenario.renewalRateAssumption,
@@ -313,8 +460,8 @@ export function projectBuyScenario(
       scenario.monthlyUtilities +
       scenario.monthlyMaintenance;
 
-    // 5. Calculate discretionary income
-    const monthlyIncome = currentIncome / 12;
+    // 5. Calculate discretionary income (use net income for actual cash flow)
+    const monthlyIncome = netAnnualIncome / 12;
     const monthlyLifeEventAdjustment = Math.abs(lifeEventImpact.monthlyAdjustment);
     const totalMonthlyExpenses =
       monthlyHousingCost +
@@ -326,25 +473,46 @@ export function projectBuyScenario(
       monthlyDiscretionary * (profile.savingsRate / 100)
     );
 
-    // 6. Grow portfolio through the year
+    // 6. Split savings between invested and non-invested
+    const nonInvestedRate = profile.nonInvestedSavingsRate || 0;
+    const monthlyNonInvestedSavings = monthlySavings * (nonInvestedRate / 100);
+    const monthlyInvestedSavings = monthlySavings - monthlyNonInvestedSavings;
+
+    // 7. Grow portfolio (invested savings) through the year
     portfolio = growPortfolio(
       portfolio,
-      monthlySavings,
+      monthlyInvestedSavings,
       profile.expectedInvestmentReturn
     );
 
-    // 7. Apply one-time expenses (deduct from portfolio)
-    portfolio = Math.max(0, portfolio - lifeEventImpact.oneTimeExpenses);
+    // 8. Grow non-invested savings (HISA) through the year
+    const hisaRate = profile.nonInvestedReturnRate || 2;
+    nonInvestedSavings = growPortfolio(
+      nonInvestedSavings,
+      monthlyNonInvestedSavings,
+      hisaRate
+    );
 
-    // 8. Update home value (appreciation) and mortgage balance
+    // 9. Apply one-time expenses (deduct from portfolio first, then non-invested)
+    let remainingExpense = lifeEventImpact.oneTimeExpenses;
+    if (remainingExpense > 0) {
+      const fromPortfolio = Math.min(portfolio, remainingExpense);
+      portfolio = Math.max(0, portfolio - fromPortfolio);
+      remainingExpense -= fromPortfolio;
+      if (remainingExpense > 0) {
+        nonInvestedSavings = Math.max(0, nonInvestedSavings - remainingExpense);
+      }
+    }
+
+    // 10. Update home value (appreciation) and mortgage balance
     homeValue *= 1 + scenario.annualAppreciation / 100;
     mortgageBalance = Math.max(0, mortgageBalance - amortization.totalPrincipal);
 
     const homeEquity = homeValue - mortgageBalance;
 
-    // 9. Build cash flow breakdown
+    // 11. Build cash flow breakdown (use net income for accurate reporting)
     const cashFlow: CashFlowBreakdown = {
-      income: currentIncome,
+      income: netAnnualIncome,
       toRent: 0,
       toMortgageInterest: amortization.totalInterest,
       toMortgagePrincipal: amortization.totalPrincipal,
@@ -359,20 +527,21 @@ export function projectBuyScenario(
       toInvestments: monthlySavings * 12,
     };
 
-    // 10. Record snapshot
+    // 12. Record snapshot (use net income for actual year's income)
     snapshots.push({
       year,
-      annualIncome: currentIncome,
+      annualIncome: netAnnualIncome,
       monthlyHousingCost,
       monthlyNonHousingExpenses: profile.monthlyNonHousingExpenses,
       monthlyLifeEventAdjustment,
       monthlyDiscretionary,
       monthlySavings,
       investmentPortfolio: portfolio,
+      nonInvestedSavingsBalance: nonInvestedSavings,
       homeValue,
       mortgageBalance,
       homeEquity,
-      netWorth: portfolio + homeEquity,
+      netWorth: portfolio + nonInvestedSavings + homeEquity,
       cashFlow,
     });
   }

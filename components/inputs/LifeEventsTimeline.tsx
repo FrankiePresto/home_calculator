@@ -16,7 +16,10 @@ const PRESETS: Partial<LifeEvent>[] = [
   { description: 'Childcare', type: 'phase', monthlyAmount: -2000 },
   { description: 'Child Expenses', type: 'phase', monthlyAmount: -1500 },
   { description: 'Car Payment', type: 'ongoing', monthlyAmount: -500 },
-  { description: 'Promotion', type: 'income-change', percentChange: 15 },
+  { description: 'Promotion', type: 'income-change', percentChange: 15, incomeChangeDuration: 'ongoing' },
+  { description: 'Sabbatical', type: 'income-change', incomeChangeDuration: 'phase', incomeMultiplier: 0.5 },
+  { description: 'Mat Leave (EI)', type: 'income-change', incomeChangeDuration: 'phase', incomeMultiplier: 0.55 },
+  { description: 'Part-time Period', type: 'income-change', incomeChangeDuration: 'phase', incomeMultiplier: 0.6 },
 ];
 
 interface LifeEventRowProps {
@@ -24,9 +27,10 @@ interface LifeEventRowProps {
   onUpdate: (updates: Partial<LifeEvent>) => void;
   onRemove: () => void;
   maxYear: number;
+  isDualIncome: boolean;
 }
 
-function LifeEventRow({ event, onUpdate, onRemove, maxYear }: LifeEventRowProps) {
+function LifeEventRow({ event, onUpdate, onRemove, maxYear, isDualIncome }: LifeEventRowProps) {
   const yearOptions = Array.from({ length: maxYear }, (_, i) => ({
     value: i + 1,
     label: `Year ${i + 1}`,
@@ -165,30 +169,130 @@ function LifeEventRow({ event, onUpdate, onRemove, maxYear }: LifeEventRowProps)
 
       {event.type === 'income-change' && (
         <>
-          <div className="w-28">
-            <label className="block text-xs font-medium text-gray-500 mb-1">Year</label>
+          <div className="w-32">
+            <label className="block text-xs font-medium text-gray-500 mb-1">Duration</label>
             <select
-              value={event.year || 1}
-              onChange={(e) => onUpdate({ year: parseInt(e.target.value) })}
+              value={event.incomeChangeDuration || 'ongoing'}
+              onChange={(e) => {
+                const duration = e.target.value as 'ongoing' | 'phase';
+                if (duration === 'phase') {
+                  onUpdate({
+                    incomeChangeDuration: duration,
+                    startYear: event.startYear || 1,
+                    endYear: event.endYear || 2,
+                    incomeMultiplier: event.incomeMultiplier || 0.5,
+                    year: undefined,
+                    percentChange: undefined,
+                    newAnnualIncome: undefined,
+                  });
+                } else {
+                  onUpdate({
+                    incomeChangeDuration: duration,
+                    year: event.year || 1,
+                    percentChange: event.percentChange || 0,
+                    startYear: undefined,
+                    endYear: undefined,
+                    incomeMultiplier: undefined,
+                  });
+                }
+              }}
               className="block w-full rounded-md border-0 py-1.5 px-2 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-blue-500 text-sm"
             >
-              {yearOptions.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
+              <option value="ongoing">Ongoing</option>
+              <option value="phase">Temporary</option>
             </select>
           </div>
-          <div className="w-32">
-            <label className="block text-xs font-medium text-gray-500 mb-1">Change %</label>
-            <div className="relative">
-              <input
-                type="number"
-                value={event.percentChange || 0}
-                onChange={(e) => onUpdate({ percentChange: parseFloat(e.target.value) || 0 })}
-                className="block w-full rounded-md border-0 py-1.5 pl-2 pr-6 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-blue-500 text-sm"
-              />
-              <span className="absolute right-2 top-1.5 text-gray-500 text-sm">%</span>
+
+          {/* Earner selector (only for dual income households) */}
+          {isDualIncome && (
+            <div className="w-28">
+              <label className="block text-xs font-medium text-gray-500 mb-1">Earner</label>
+              <select
+                value={event.affectedEarner || 'primary'}
+                onChange={(e) => onUpdate({ affectedEarner: e.target.value as 'primary' | 'secondary' })}
+                className="block w-full rounded-md border-0 py-1.5 px-2 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-blue-500 text-sm"
+              >
+                <option value="primary">Primary</option>
+                <option value="secondary">Secondary</option>
+              </select>
             </div>
-          </div>
+          )}
+
+          {/* Ongoing income change fields */}
+          {(!event.incomeChangeDuration || event.incomeChangeDuration === 'ongoing') && (
+            <>
+              <div className="w-28">
+                <label className="block text-xs font-medium text-gray-500 mb-1">Year</label>
+                <select
+                  value={event.year || 1}
+                  onChange={(e) => onUpdate({ year: parseInt(e.target.value) })}
+                  className="block w-full rounded-md border-0 py-1.5 px-2 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-blue-500 text-sm"
+                >
+                  {yearOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="w-32">
+                <label className="block text-xs font-medium text-gray-500 mb-1">Change %</label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    value={event.percentChange || 0}
+                    onChange={(e) => onUpdate({ percentChange: parseFloat(e.target.value) || 0 })}
+                    className="block w-full rounded-md border-0 py-1.5 pl-2 pr-6 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-blue-500 text-sm"
+                  />
+                  <span className="absolute right-2 top-1.5 text-gray-500 text-sm">%</span>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Phase-based income change fields */}
+          {event.incomeChangeDuration === 'phase' && (
+            <>
+              <div className="w-28">
+                <label className="block text-xs font-medium text-gray-500 mb-1">Start Year</label>
+                <select
+                  value={event.startYear || 1}
+                  onChange={(e) => onUpdate({ startYear: parseInt(e.target.value) })}
+                  className="block w-full rounded-md border-0 py-1.5 px-2 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-blue-500 text-sm"
+                >
+                  {yearOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="w-28">
+                <label className="block text-xs font-medium text-gray-500 mb-1">End Year</label>
+                <select
+                  value={event.endYear || (event.startYear || 1) + 1}
+                  onChange={(e) => onUpdate({ endYear: parseInt(e.target.value) })}
+                  className="block w-full rounded-md border-0 py-1.5 px-2 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-blue-500 text-sm"
+                >
+                  {yearOptions
+                    .filter((opt) => opt.value >= (event.startYear || 1))
+                    .map((opt) => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                </select>
+              </div>
+              <div className="w-32">
+                <label className="block text-xs font-medium text-gray-500 mb-1">Income %</label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    value={Math.round((event.incomeMultiplier || 0.5) * 100)}
+                    onChange={(e) => onUpdate({ incomeMultiplier: (parseFloat(e.target.value) || 50) / 100 })}
+                    min={0}
+                    max={100}
+                    className="block w-full rounded-md border-0 py-1.5 pl-2 pr-6 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-blue-500 text-sm"
+                  />
+                  <span className="absolute right-2 top-1.5 text-gray-500 text-sm">%</span>
+                </div>
+              </div>
+            </>
+          )}
         </>
       )}
 
@@ -215,6 +319,9 @@ export function LifeEventsTimeline() {
   const removeLifeEvent = useStore((state) => state.removeLifeEvent);
   const clearLifeEvents = useStore((state) => state.clearLifeEvents);
   const timeframe = useStore((state) => state.settings.timeframeYears);
+  const profile = useStore((state) => state.financialProfile);
+
+  const isDualIncome = profile.incomeType === 'dual' && (profile.secondaryIncome || 0) > 0;
 
   const [showPresets, setShowPresets] = useState(false);
 
@@ -230,16 +337,19 @@ export function LifeEventsTimeline() {
   };
 
   const handleAddPreset = (preset: Partial<LifeEvent>) => {
+    const isPhaseIncome = preset.type === 'income-change' && preset.incomeChangeDuration === 'phase';
     const newEvent: LifeEvent = {
       id: generateId(),
       description: preset.description || '',
       type: preset.type || 'one-time',
-      year: preset.type === 'one-time' || preset.type === 'income-change' ? 3 : undefined,
+      year: (preset.type === 'one-time' || (preset.type === 'income-change' && !isPhaseIncome)) ? 3 : undefined,
       amount: preset.amount,
-      startYear: preset.type === 'ongoing' || preset.type === 'phase' ? 3 : undefined,
-      endYear: preset.type === 'phase' ? 8 : undefined,
+      startYear: (preset.type === 'ongoing' || preset.type === 'phase' || isPhaseIncome) ? 3 : undefined,
+      endYear: (preset.type === 'phase' || isPhaseIncome) ? 4 : undefined,
       monthlyAmount: preset.monthlyAmount,
       percentChange: preset.percentChange,
+      incomeChangeDuration: preset.incomeChangeDuration,
+      incomeMultiplier: preset.incomeMultiplier,
     };
     addLifeEvent(newEvent);
     setShowPresets(false);
@@ -272,6 +382,7 @@ export function LifeEventsTimeline() {
               onUpdate={(updates) => updateLifeEvent(event.id, updates)}
               onRemove={() => removeLifeEvent(event.id)}
               maxYear={timeframe}
+              isDualIncome={isDualIncome}
             />
           ))}
         </div>

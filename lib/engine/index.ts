@@ -68,3 +68,22 @@ export {
   type SankeyLink,
   type SankeyData,
 } from './cashflow';
+
+// Feasibility analysis
+export {
+  analyzeFeasibility,
+  getFeasibilitySummary,
+} from './feasibility';
+
+// Tax calculations
+export {
+  calculateFederalTax,
+  calculateProvincialTax,
+  calculateTotalTax,
+  calculateHouseholdTax,
+  calculateNetIncome,
+  getProvinceName,
+  SUPPORTED_PROVINCES,
+  type Province,
+  type TaxResult,
+} from './taxes';

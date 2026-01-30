@@ -2,6 +2,7 @@
 
 import { useStore } from '@/lib/store';
 import { InsightCards } from './InsightCards';
+import { FeasibilityWarnings } from './FeasibilityWarnings';
 import { NetWorthChart } from './NetWorthChart';
 import { SunkCostComparison } from './SunkCostComparison';
 import { CashFlowSankey } from './CashFlowSankey';
@@ -69,6 +70,9 @@ export function ResultsDashboard() {
 
   return (
     <div className="space-y-6">
+      {/* Feasibility Warnings - Show at top if any issues */}
+      <FeasibilityWarnings />
+
       {/* Key Insights */}
       <InsightCards />
 
