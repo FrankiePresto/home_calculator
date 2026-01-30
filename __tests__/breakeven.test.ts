@@ -29,6 +29,13 @@ const baseProfile: FinancialProfile = {
   expectedInvestmentReturn: 7,
   savingsRate: 50,
   annualRaisePercent: 2,
+  useAdvancedSavings: false,
+  nonInvestedSavingsRate: 0,
+  nonInvestedReturnRate: 2,
+  includeTaxes: false,
+  province: 'ON',
+  incomeType: 'single',
+  secondaryIncome: 0,
 };
 
 const baseRentScenario: RentScenario = {

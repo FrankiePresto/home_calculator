@@ -301,8 +301,8 @@ export function projectRentScenario(
       monthlyDiscretionary * (profile.savingsRate / 100)
     );
 
-    // 5. Split savings between invested and non-invested
-    const nonInvestedRate = profile.nonInvestedSavingsRate || 0;
+    // 5. Split savings between invested and non-invested (only if advanced savings enabled)
+    const nonInvestedRate = profile.useAdvancedSavings ? (profile.nonInvestedSavingsRate || 0) : 0;
     const monthlyNonInvestedSavings = monthlySavings * (nonInvestedRate / 100);
     const monthlyInvestedSavings = monthlySavings - monthlyNonInvestedSavings;
 
@@ -313,13 +313,15 @@ export function projectRentScenario(
       profile.expectedInvestmentReturn
     );
 
-    // 7. Grow non-invested savings (HISA) through the year
-    const hisaRate = profile.nonInvestedReturnRate || 2;
-    nonInvestedSavings = growPortfolio(
-      nonInvestedSavings,
-      monthlyNonInvestedSavings,
-      hisaRate
-    );
+    // 7. Grow non-invested savings (HISA) through the year (only if advanced savings enabled)
+    if (profile.useAdvancedSavings && monthlyNonInvestedSavings > 0) {
+      const hisaRate = profile.nonInvestedReturnRate || 2;
+      nonInvestedSavings = growPortfolio(
+        nonInvestedSavings,
+        monthlyNonInvestedSavings,
+        hisaRate
+      );
+    }
 
     // 8. Apply one-time expenses (deduct from portfolio first, then non-invested)
     let remainingExpense = lifeEventImpact.oneTimeExpenses;
@@ -473,8 +475,8 @@ export function projectBuyScenario(
       monthlyDiscretionary * (profile.savingsRate / 100)
     );
 
-    // 6. Split savings between invested and non-invested
-    const nonInvestedRate = profile.nonInvestedSavingsRate || 0;
+    // 6. Split savings between invested and non-invested (only if advanced savings enabled)
+    const nonInvestedRate = profile.useAdvancedSavings ? (profile.nonInvestedSavingsRate || 0) : 0;
     const monthlyNonInvestedSavings = monthlySavings * (nonInvestedRate / 100);
     const monthlyInvestedSavings = monthlySavings - monthlyNonInvestedSavings;
 
@@ -485,13 +487,15 @@ export function projectBuyScenario(
       profile.expectedInvestmentReturn
     );
 
-    // 8. Grow non-invested savings (HISA) through the year
-    const hisaRate = profile.nonInvestedReturnRate || 2;
-    nonInvestedSavings = growPortfolio(
-      nonInvestedSavings,
-      monthlyNonInvestedSavings,
-      hisaRate
-    );
+    // 8. Grow non-invested savings (HISA) through the year (only if advanced savings enabled)
+    if (profile.useAdvancedSavings && monthlyNonInvestedSavings > 0) {
+      const hisaRate = profile.nonInvestedReturnRate || 2;
+      nonInvestedSavings = growPortfolio(
+        nonInvestedSavings,
+        monthlyNonInvestedSavings,
+        hisaRate
+      );
+    }
 
     // 9. Apply one-time expenses (deduct from portfolio first, then non-invested)
     let remainingExpense = lifeEventImpact.oneTimeExpenses;

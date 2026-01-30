@@ -16,6 +16,7 @@ export interface FinancialProfile {
   annualRaisePercent: number;         // Expected annual income growth (default: 2%)
 
   // Non-invested savings (P4: HISA/emergency fund)
+  useAdvancedSavings: boolean;        // Toggle advanced savings split mode
   nonInvestedSavingsRate: number;     // % of savings NOT invested (0-100)
   nonInvestedReturnRate: number;      // Return rate for HISA (default: 2%)
 
@@ -246,7 +247,9 @@ export type FeasibilityWarningSeverity = 'warning' | 'critical';
 export interface FeasibilityWarning {
   type: FeasibilityWarningType;
   year: number;
+  endYear?: number;                   // For aggregated warnings spanning multiple years
   severity: FeasibilityWarningSeverity;
   message: string;
   scenario: 'rent' | 'buy';
+  valueRange?: string;                // For displaying ranges like "36-38%"
 }

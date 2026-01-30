@@ -39,6 +39,7 @@ const defaultFinancialProfile: FinancialProfile = {
   expectedInvestmentReturn: 7,
   savingsRate: 50,
   annualRaisePercent: 2,
+  useAdvancedSavings: false,  // Default: all savings invested at investment return rate
   nonInvestedSavingsRate: 0,  // Default: all savings invested (preserves current behavior)
   nonInvestedReturnRate: 2,   // Default: 2% HISA rate
   includeTaxes: false,        // Default: taxes disabled (preserves current behavior)

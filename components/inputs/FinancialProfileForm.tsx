@@ -105,9 +105,6 @@ function DiscretionaryPreview({ profile }: { profile: FinancialProfile }) {
 export function FinancialProfileForm() {
   const profile = useStore((state) => state.financialProfile);
   const setProfile = useStore((state) => state.setFinancialProfile);
-  const [showAdvancedSavings, setShowAdvancedSavings] = useState(
-    (profile.nonInvestedSavingsRate || 0) > 0
-  );
   const [showTaxSettings, setShowTaxSettings] = useState(profile.includeTaxes || false);
 
   return (
@@ -215,23 +212,27 @@ export function FinancialProfileForm() {
 
       {/* Advanced Savings Section */}
       <div className="mt-4 border-t pt-4">
-        <button
-          type="button"
-          onClick={() => setShowAdvancedSavings(!showAdvancedSavings)}
-          className="flex items-center text-sm font-medium text-gray-700 hover:text-gray-900"
-        >
-          <svg
-            className={`mr-2 h-4 w-4 transform transition-transform ${showAdvancedSavings ? 'rotate-90' : ''}`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-          Advanced Savings Options
-        </button>
+        <div className="flex items-start gap-3">
+          <input
+            id="use-advanced-savings"
+            type="checkbox"
+            checked={profile.useAdvancedSavings || false}
+            onChange={(e) => setProfile({ useAdvancedSavings: e.target.checked })}
+            className="mt-1 h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+          />
+          <div className="flex-1">
+            <label htmlFor="use-advanced-savings" className="text-sm font-medium text-gray-700 cursor-pointer">
+              Use Advanced Savings Split
+            </label>
+            <p className="text-xs text-gray-500 mt-0.5">
+              {profile.useAdvancedSavings
+                ? 'Savings are split between investments and HISA based on settings below'
+                : 'All savings go to investments at your expected investment return rate'}
+            </p>
+          </div>
+        </div>
 
-        {showAdvancedSavings && (
+        {profile.useAdvancedSavings && (
           <div className="mt-4 p-4 bg-gray-50 rounded-lg">
             <p className="text-sm text-gray-600 mb-4">
               Split your savings between invested (stocks/ETFs) and non-invested (HISA/emergency fund).

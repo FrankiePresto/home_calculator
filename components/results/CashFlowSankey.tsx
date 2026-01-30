@@ -154,6 +154,67 @@ export function CashFlowSankey() {
         </div>
       </div>
 
+      {/* Monthly Cash Flow Summary */}
+      <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+        <p className="text-sm font-medium text-blue-700 mb-2">Monthly Cash Flow</p>
+        <div className="grid grid-cols-3 gap-4 text-sm">
+          <div>
+            <p className="text-blue-600">Income</p>
+            <p className="font-semibold text-blue-900">{formatCurrency(totalIncome / 12)}/mo</p>
+          </div>
+          <div>
+            <p className="text-red-600">Sunk Costs</p>
+            <p className="font-semibold text-red-700">-{formatCurrency(cashFlowData.totalSunk / 12)}/mo</p>
+          </div>
+          <div>
+            <p className="text-green-600">Wealth Building</p>
+            <p className="font-semibold text-green-700">+{formatCurrency(cashFlowData.totalWealth / 12)}/mo</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Mortgage Payment Breakdown - Buy scenario only */}
+      {selectedScenario === 'buy' && cashFlowData.sunkCosts.mortgageInterest + cashFlowData.wealthBuilding.mortgagePrincipal > 0 && (() => {
+        const monthlyInterest = cashFlowData.sunkCosts.mortgageInterest / 12;
+        const monthlyPrincipal = cashFlowData.wealthBuilding.mortgagePrincipal / 12;
+        const monthlyPayment = monthlyInterest + monthlyPrincipal;
+        const interestPercent = (monthlyInterest / monthlyPayment) * 100;
+        const principalPercent = (monthlyPrincipal / monthlyPayment) * 100;
+
+        return (
+          <div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm font-medium text-gray-700">Monthly Mortgage Payment</p>
+              <p className="text-lg font-bold text-gray-900">{formatCurrency(monthlyPayment)}</p>
+            </div>
+            <div className="h-6 flex rounded overflow-hidden">
+              <div
+                className="bg-red-400 flex items-center justify-center text-xs font-medium text-white transition-all duration-300"
+                style={{ width: `${interestPercent}%` }}
+                title={`Interest: ${formatCurrency(monthlyInterest)}`}
+              >
+                {interestPercent > 20 && `${interestPercent.toFixed(0)}%`}
+              </div>
+              <div
+                className="bg-green-500 flex items-center justify-center text-xs font-medium text-white transition-all duration-300"
+                style={{ width: `${principalPercent}%` }}
+                title={`Principal: ${formatCurrency(monthlyPrincipal)}`}
+              >
+                {principalPercent > 20 && `${principalPercent.toFixed(0)}%`}
+              </div>
+            </div>
+            <div className="flex justify-between mt-2 text-xs">
+              <span className="text-red-600">
+                Interest: {formatCurrency(monthlyInterest)} ({interestPercent.toFixed(0)}%)
+              </span>
+              <span className="text-green-600">
+                Principal: {formatCurrency(monthlyPrincipal)} ({principalPercent.toFixed(0)}%)
+              </span>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Flow visualization */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Sunk Costs */}
