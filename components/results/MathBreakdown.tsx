@@ -148,7 +148,7 @@ export function MathBreakdown() {
               <li>• Home appreciation ({buyScenario.annualAppreciation}%) builds equity faster than rent savings grow</li>
               <li>• Mortgage principal payments build equity (forced savings)</li>
               <li>• Home value grows to {formatCurrency(breakdown.yearlyData[timeframe].buyHomeValue)} by year {timeframe}</li>
-              <li>• Home equity ({formatCurrency(breakdown.yearlyData[timeframe].buyHomeEquity)}) + portfolio ({formatCurrency(breakdown.yearlyData[timeframe].buyPortfolio)}) exceeds renter's portfolio</li>
+              <li>• Home equity ({formatCurrency(breakdown.yearlyData[timeframe].buyHomeEquity)}) + portfolio ({formatCurrency(breakdown.yearlyData[timeframe].buyPortfolio)}) exceeds renter's portfolio ({formatCurrency(breakdown.yearlyData[timeframe].rentPortfolio)})</li>
               {breakdown.buyMonthlyLifeEvents > 0 && (
                 <li>• Life events reduce monthly savings by {formatCurrency(breakdown.buyMonthlyLifeEvents)}</li>
               )}
@@ -156,6 +156,17 @@ export function MathBreakdown() {
           )}
         </ul>
       </div>
+
+      {/* Renter's Investment Advantage - only show when renting wins */}
+      {winner === 'rent' && breakdown.savingsDiff > 0 && (
+        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg mb-6">
+          <p className="text-sm text-blue-800">
+            <strong>Investment Advantage:</strong> When renting, you invest{' '}
+            {formatCurrency(breakdown.savingsDiff)} more per month into your portfolio. Over {timeframe} years,
+            this grows to {formatCurrency(breakdown.yearlyData[timeframe].rentPortfolio)}.
+          </p>
+        </div>
+      )}
 
       {/* Side-by-side comparison */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">

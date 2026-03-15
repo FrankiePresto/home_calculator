@@ -4,6 +4,30 @@ import { useStore } from '@/lib/store';
 import { formatCurrency, formatYears } from '@/lib/utils/formatters';
 import { getMilestoneComparisons } from '@/lib/engine';
 
+function InfoTooltip({ text }: { text: string }) {
+  return (
+    <span className="relative inline-block ml-1 group cursor-help">
+      <svg
+        className="w-4 h-4 text-gray-400 hover:text-gray-600"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+        />
+      </svg>
+      <span className="absolute z-10 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity duration-200 bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 p-2 text-xs text-white bg-gray-800 rounded-lg shadow-lg">
+        {text}
+        <span className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></span>
+      </span>
+    </span>
+  );
+}
+
 export function InsightCards() {
   const results = useStore((state) => state.results);
   const timeframe = useStore((state) => state.settings.timeframeYears);
@@ -35,8 +59,9 @@ export function InsightCards() {
         <div className="bg-white rounded-lg shadow p-6 border-l-4 border-l-gray-300"
           style={{ borderLeftColor: winner === 'rent' ? '#2563eb' : '#16a34a' }}>
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide">
+            <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide flex items-center">
               Winner at {timeframe} Years
+              <InfoTooltip text="The option that results in higher net worth at the end of your selected timeframe, considering all costs, investments, and appreciation." />
             </h3>
             <span className={`text-2xl ${winner === 'rent' ? 'text-blue-600' : 'text-green-600'}`}>
               {winner === 'rent' ? '🏠' : '🔑'}
@@ -53,8 +78,9 @@ export function InsightCards() {
         {/* Breakeven Card */}
         <div className="bg-white rounded-lg shadow p-6 border-l-4 border-l-amber-500">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide">
+            <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide flex items-center">
               Breakeven Point
+              <InfoTooltip text="The number of years until buying becomes financially better than renting. Before this point, renting is more advantageous." />
             </h3>
             <span className="text-2xl">⏱️</span>
           </div>
@@ -73,8 +99,9 @@ export function InsightCards() {
         {/* Equivalent Rent Card */}
         <div className="bg-white rounded-lg shadow p-6 border-l-4 border-l-purple-500">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide">
+            <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide flex items-center">
               Equivalent Rent
+              <InfoTooltip text="The monthly rent at which renting and buying would result in the same net worth after the analysis period. If your current rent is below this, renting is more favorable." />
             </h3>
             <span className="text-2xl">💰</span>
           </div>
@@ -91,8 +118,9 @@ export function InsightCards() {
         {/* Initial Opportunity Cost */}
         <div className="bg-white rounded-lg shadow p-6 border-l-4 border-l-red-500">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide">
+            <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wide flex items-center">
               Day 1 Cost
+              <InfoTooltip text="The immediate reduction in your net worth when purchasing a home, consisting of down payment, closing costs, and other upfront expenses that leave your investment portfolio." />
             </h3>
             <span className="text-2xl">📉</span>
           </div>

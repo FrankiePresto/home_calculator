@@ -9,6 +9,7 @@ import { CashFlowSankey } from './CashFlowSankey';
 import { SensitivityChart } from './SensitivityChart';
 import { BreakevenDisplay } from './BreakevenDisplay';
 import { MathBreakdown } from './MathBreakdown';
+import { MortgagePayoffChart } from './MortgagePayoffChart';
 
 export function ResultsDashboard() {
   const results = useStore((state) => state.results);
@@ -78,6 +79,9 @@ export function ResultsDashboard() {
 
       {/* Math Breakdown - Shows the numbers behind the results */}
       <MathBreakdown />
+
+      {/* Mortgage Acceleration - Interactive extra payment explorer */}
+      <MortgagePayoffChart />
 
       {/* Net Worth Chart */}
       <NetWorthChart />

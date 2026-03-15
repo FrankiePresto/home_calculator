@@ -16,6 +16,7 @@ interface FlowItem {
 
 export function CashFlowSankey() {
   const results = useStore((state) => state.results);
+  const financialProfile = useStore((state) => state.financialProfile);
   const timeframe = useStore((state) => state.settings.timeframeYears);
   const [selectedYear, setSelectedYear] = useState(1);
   const [selectedScenario, setSelectedScenario] = useState<ScenarioType>('buy');
@@ -142,7 +143,7 @@ export function CashFlowSankey() {
       <div className="mb-6 p-4 bg-gray-100 rounded-lg">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-gray-600">Annual Gross Income</p>
+            <p className="text-sm text-gray-600">Annual {financialProfile.includeTaxes ? 'Net' : 'Gross'} Income</p>
             <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalIncome)}</p>
           </div>
           <div className="text-right">
@@ -157,9 +158,9 @@ export function CashFlowSankey() {
       {/* Monthly Cash Flow Summary */}
       <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
         <p className="text-sm font-medium text-blue-700 mb-2">Monthly Cash Flow</p>
-        <div className="grid grid-cols-3 gap-4 text-sm">
+        <div className="grid grid-cols-4 gap-4 text-sm">
           <div>
-            <p className="text-blue-600">Income</p>
+            <p className="text-blue-600">{financialProfile.includeTaxes ? 'Net ' : ''}Income</p>
             <p className="font-semibold text-blue-900">{formatCurrency(totalIncome / 12)}/mo</p>
           </div>
           <div>
@@ -169,6 +170,10 @@ export function CashFlowSankey() {
           <div>
             <p className="text-green-600">Wealth Building</p>
             <p className="font-semibold text-green-700">+{formatCurrency(cashFlowData.totalWealth / 12)}/mo</p>
+          </div>
+          <div>
+            <p className="text-gray-600">Remaining</p>
+            <p className="font-semibold text-gray-700">{formatCurrency((totalIncome - cashFlowData.totalSunk - cashFlowData.totalWealth) / 12)}/mo</p>
           </div>
         </div>
       </div>
@@ -318,16 +323,16 @@ export function CashFlowSankey() {
             <div
               className="bg-gray-300 flex items-center justify-center text-xs font-medium text-gray-600"
               style={{ width: `${(unaccounted / totalIncome) * 100}%` }}
-              title="Unallocated/Tax"
+              title={financialProfile.includeTaxes ? "Remaining Funds" : "Unallocated/Tax"}
             >
-              {(unaccounted / totalIncome) * 100 > 15 && 'Other'}
+              {(unaccounted / totalIncome) * 100 > 15 && (financialProfile.includeTaxes ? 'Remaining' : 'Other')}
             </div>
           )}
         </div>
         <div className="flex justify-between mt-2 text-xs text-gray-500">
           <span>Sunk: {formatCurrency(cashFlowData.totalSunk)}</span>
           <span>Wealth: {formatCurrency(cashFlowData.totalWealth)}</span>
-          {unaccounted > 0 && <span>Other: {formatCurrency(unaccounted)}</span>}
+          {unaccounted > 0 && <span>{financialProfile.includeTaxes ? 'Remaining' : 'Other'}: {formatCurrency(unaccounted)}</span>}
         </div>
       </div>
     </div>

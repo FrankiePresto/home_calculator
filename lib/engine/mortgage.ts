@@ -217,6 +217,128 @@ export function getRemainingAmortization(
   return Math.max(0, originalAmortization - currentYear + 1);
 }
 
+// =============================================================================
+// Mortgage Acceleration Simulation
+// =============================================================================
+
+export interface MortgageYearlySnapshot {
+  year: number;
+  balance: number;
+  cumulativeInterest: number;
+}
+
+export interface MortgageComparisonResult {
+  base: MortgageYearlySnapshot[];
+  accelerated: MortgageYearlySnapshot[];
+  baseTotalInterest: number;
+  acceleratedTotalInterest: number;
+  interestSaved: number;
+  monthsSaved: number;
+  acceleratedPayoffMonth: number;
+}
+
+/**
+ * Simulate base and accelerated mortgage schedules for comparison.
+ *
+ * Extra monthly payments are applied every month on top of the required payment.
+ * Lump sums (provided as pre-aggregated per-year totals) are applied at the end
+ * of each applicable year, after that year's monthly payments.
+ *
+ * The caller is responsible for computing lumpSumsPerYear from whatever rule
+ * representation makes sense at the UI layer.
+ */
+export function simulateMortgageWithExtraPayments(
+  principal: number,
+  annualRate: number,
+  amortizationYears: number,
+  extraMonthlyPayment: number = 0,
+  lumpSumsPerYear: Array<{ year: number; amount: number }> = []
+): MortgageComparisonResult {
+  if (principal <= 0) {
+    const empty: MortgageYearlySnapshot[] = [{ year: 0, balance: 0, cumulativeInterest: 0 }];
+    return { base: empty, accelerated: empty, baseTotalInterest: 0, acceleratedTotalInterest: 0, interestSaved: 0, monthsSaved: 0, acceleratedPayoffMonth: 0 };
+  }
+
+  const baseMonthlyPayment = calculateMonthlyMortgagePayment(principal, annualRate, amortizationYears);
+  const monthlyRate = annualRate / 100 / 12;
+
+  const lumpSumMap = new Map<number, number>();
+  for (const ls of lumpSumsPerYear) {
+    if (ls.year > 0 && ls.amount > 0) {
+      lumpSumMap.set(ls.year, (lumpSumMap.get(ls.year) || 0) + ls.amount);
+    }
+  }
+
+  // Base schedule — required payment only
+  const base: MortgageYearlySnapshot[] = [{ year: 0, balance: principal, cumulativeInterest: 0 }];
+  let baseBalance = principal;
+  let baseCumInterest = 0;
+
+  for (let year = 1; year <= amortizationYears; year++) {
+    for (let m = 0; m < 12 && baseBalance > 0; m++) {
+      const interest = baseBalance * monthlyRate;
+      const principalPaid = Math.min(Math.max(0, baseMonthlyPayment - interest), baseBalance);
+      baseCumInterest += interest;
+      baseBalance = Math.max(0, baseBalance - principalPaid);
+    }
+    base.push({ year, balance: baseBalance, cumulativeInterest: baseCumInterest });
+  }
+
+  // Accelerated schedule — extra monthly + annual lump sums
+  const accelerated: MortgageYearlySnapshot[] = [{ year: 0, balance: principal, cumulativeInterest: 0 }];
+  let accBalance = principal;
+  let accCumInterest = 0;
+  let accPayoffMonth = amortizationYears * 12;
+  let paidOff = false;
+
+  for (let year = 1; year <= amortizationYears && !paidOff; year++) {
+    for (let m = 0; m < 12; m++) {
+      if (accBalance <= 0) { paidOff = true; break; }
+      const interest = accBalance * monthlyRate;
+      // Cap total payment so we never overpay on the final month
+      const totalPayment = Math.min(baseMonthlyPayment + extraMonthlyPayment, accBalance + interest);
+      const principalPaid = Math.max(0, totalPayment - interest);
+      accCumInterest += interest;
+      accBalance = Math.max(0, accBalance - principalPaid);
+      if (accBalance === 0) {
+        accPayoffMonth = (year - 1) * 12 + m + 1;
+        paidOff = true;
+        break;
+      }
+    }
+
+    if (!paidOff && accBalance > 0) {
+      const lumpSum = lumpSumMap.get(year) || 0;
+      if (lumpSum > 0) {
+        accBalance = Math.max(0, accBalance - lumpSum);
+        if (accBalance === 0) {
+          accPayoffMonth = year * 12;
+          paidOff = true;
+        }
+      }
+    }
+
+    accelerated.push({ year, balance: accBalance, cumulativeInterest: accCumInterest });
+    if (paidOff) break;
+  }
+
+  // Pad to full amortization length so both arrays align for charting
+  const lastAccYear = accelerated[accelerated.length - 1].year;
+  for (let year = lastAccYear + 1; year <= amortizationYears; year++) {
+    accelerated.push({ year, balance: 0, cumulativeInterest: accCumInterest });
+  }
+
+  return {
+    base,
+    accelerated,
+    baseTotalInterest: baseCumInterest,
+    acceleratedTotalInterest: accCumInterest,
+    interestSaved: Math.max(0, baseCumInterest - accCumInterest),
+    monthsSaved: Math.max(0, amortizationYears * 12 - accPayoffMonth),
+    acceleratedPayoffMonth: accPayoffMonth,
+  };
+}
+
 /**
  * Get the interest rate for a specific year (handles renewal assumptions)
  * This is a simplified model - in reality, renewal rates would vary
