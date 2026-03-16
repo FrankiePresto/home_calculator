@@ -57,7 +57,9 @@
   }
   
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply antialiased;
+    background-color: rgb(var(--background));
+    color: rgb(var(--foreground));
     font-feature-settings: "rlig" 1, "calt" 1;
   }
   
@@ -70,61 +72,93 @@
 @layer components {
   /* Card component */
   .card {
-    @apply bg-card text-card-foreground rounded-xl border shadow-sm;
+    @apply rounded-xl border shadow-sm;
+    background-color: rgb(var(--card));
+    color: rgb(var(--card-foreground));
     border-color: rgb(var(--border));
   }
   
   /* Input styling */
   .input {
-    @apply flex h-10 w-full rounded-lg border bg-background px-3 py-2 text-sm 
-           ring-offset-background 
+    @apply flex h-10 w-full rounded-lg border px-3 py-2 text-sm 
            file:border-0 file:bg-transparent file:text-sm file:font-medium
-           placeholder:text-muted-foreground
            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2
            disabled:cursor-not-allowed disabled:opacity-50;
+    background-color: rgb(var(--background));
     border-color: rgb(var(--input));
     --tw-ring-color: rgb(var(--ring));
+    --tw-ring-offset-color: rgb(var(--background));
+  }
+  
+  .input::placeholder {
+    color: rgb(var(--muted-foreground));
   }
   
   /* Button base styles */
   .btn {
     @apply inline-flex items-center justify-center rounded-lg text-sm font-medium 
-           ring-offset-background transition-colors
+           transition-colors
            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2
            disabled:pointer-events-none disabled:opacity-50;
     --tw-ring-color: rgb(var(--ring));
+    --tw-ring-offset-color: rgb(var(--background));
   }
   
   .btn-primary {
-    @apply btn bg-accent text-accent-foreground hover:bg-amber-700 px-6 py-3;
+    @apply btn px-6 py-3;
+    background-color: rgb(var(--accent));
+    color: rgb(var(--accent-foreground));
+  }
+  
+  .btn-primary:hover {
+    background-color: rgb(180 83 9); /* amber-700 */
   }
   
   .btn-secondary {
-    @apply btn bg-secondary text-secondary-foreground hover:bg-stone-200 px-6 py-3;
+    @apply btn px-6 py-3;
+    background-color: rgb(var(--secondary));
+    color: rgb(var(--secondary-foreground));
+  }
+  
+  .btn-secondary:hover {
+    background-color: rgb(231 229 228); /* stone-200 */
   }
   
   .btn-outline {
-    @apply btn border bg-background hover:bg-secondary px-6 py-3;
+    @apply btn border px-6 py-3;
+    background-color: rgb(var(--background));
     border-color: rgb(var(--border));
   }
   
+  .btn-outline:hover {
+    background-color: rgb(var(--secondary));
+  }
+  
   .btn-ghost {
-    @apply btn hover:bg-secondary hover:text-secondary-foreground px-4 py-2;
+    @apply btn px-4 py-2;
+  }
+  
+  .btn-ghost:hover {
+    background-color: rgb(var(--secondary));
+    color: rgb(var(--secondary-foreground));
   }
   
   /* Section header */
   .section-header {
-    @apply text-lg font-semibold text-foreground tracking-tight;
+    @apply text-lg font-semibold tracking-tight;
+    color: rgb(var(--foreground));
   }
   
   /* Helper text */
   .helper-text {
-    @apply text-sm text-muted-foreground;
+    @apply text-sm;
+    color: rgb(var(--muted-foreground));
   }
   
   /* Label */
   .label {
-    @apply text-sm font-medium text-stone-700;
+    @apply text-sm font-medium;
+    color: rgb(120 113 108); /* stone-500 */
   }
 }
 
@@ -142,6 +176,7 @@
   
   /* Glass effect for overlays */
   .glass {
-    @apply bg-white/80 backdrop-blur-sm;
+    background-color: rgb(255 255 255 / 0.8);
+    backdrop-filter: blur(4px);
   }
 }
