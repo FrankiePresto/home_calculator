@@ -1,7 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import { useStore } from '@/lib/store';
-import { InsightCards } from './InsightCards';
+import { useWizard } from '@/components/wizard';
+import { HeroInsight } from './HeroInsight';
 import { FeasibilityWarnings } from './FeasibilityWarnings';
 import { NetWorthChart } from './NetWorthChart';
 import { SunkCostComparison } from './SunkCostComparison';
@@ -11,42 +13,42 @@ import { BreakevenDisplay } from './BreakevenDisplay';
 import { MathBreakdown } from './MathBreakdown';
 import { MortgagePayoffChart } from './MortgagePayoffChart';
 
+type TabId = 'overview' | 'details' | 'sensitivity' | 'math';
+
+const TABS: { id: TabId; label: string }[] = [
+  { id: 'overview', label: 'Overview' },
+  { id: 'details', label: 'Cash Flow' },
+  { id: 'sensitivity', label: 'What-If Analysis' },
+  { id: 'math', label: 'Math Breakdown' },
+];
+
 export function ResultsDashboard() {
   const results = useStore((state) => state.results);
-  const setActiveTab = useStore((state) => state.setActiveTab);
+  const { setStep } = useWizard();
   const calculate = useStore((state) => state.calculate);
+  const [activeTab, setActiveTab] = useState<TabId>('overview');
 
   if (!results.lastCalculated) {
     return (
-      <div className="bg-white rounded-lg shadow p-12 text-center">
-        <svg
-          className="mx-auto h-16 w-16 text-gray-400"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.5}
-            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-          />
-        </svg>
-        <h3 className="mt-4 text-xl font-semibold text-gray-900">No Results Yet</h3>
-        <p className="mt-2 text-gray-500 max-w-md mx-auto">
+      <div className="card p-12 text-center">
+        <div className="w-16 h-16 mx-auto rounded-xl bg-secondary flex items-center justify-center mb-6">
+          <ChartIcon className="w-8 h-8 text-muted-foreground" />
+        </div>
+        <h3 className="text-xl font-semibold text-foreground mb-2">No Results Yet</h3>
+        <p className="text-muted-foreground max-w-md mx-auto mb-8">
           Enter your financial details, rent scenario, and at least one buy scenario,
           then click Calculate to see a comprehensive analysis.
         </p>
-        <div className="mt-8 flex justify-center gap-4">
+        <div className="flex justify-center gap-4">
           <button
-            onClick={() => setActiveTab('inputs')}
-            className="px-6 py-3 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+            onClick={() => setStep('financial')}
+            className="btn-outline"
           >
             Go to Inputs
           </button>
           <button
             onClick={calculate}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+            className="btn-primary"
           >
             Calculate Now
           </button>
@@ -57,11 +59,11 @@ export function ResultsDashboard() {
 
   if (!results.rentProjection || !results.buyProjection) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-        <p className="text-red-800">Error: Missing projection data. Please try calculating again.</p>
+      <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-6 text-center">
+        <p className="text-destructive">Error: Missing projection data. Please try calculating again.</p>
         <button
           onClick={calculate}
-          className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700"
+          className="mt-4 btn-primary bg-destructive hover:bg-destructive/90"
         >
           Recalculate
         </button>
@@ -70,38 +72,93 @@ export function ResultsDashboard() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-6xl mx-auto">
       {/* Feasibility Warnings - Show at top if any issues */}
       <FeasibilityWarnings />
 
-      {/* Key Insights */}
-      <InsightCards />
+      {/* Hero Insight */}
+      <HeroInsight />
 
-      {/* Math Breakdown - Shows the numbers behind the results */}
-      <MathBreakdown />
-
-      {/* Mortgage Acceleration - Interactive extra payment explorer */}
-      <MortgagePayoffChart />
-
-      {/* Net Worth Chart */}
-      <NetWorthChart />
-
-      {/* Breakeven Analysis */}
-      <BreakevenDisplay />
-
-      {/* Cash Flow and Sunk Costs - Side by side on larger screens */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        <CashFlowSankey />
-        <SunkCostComparison />
+      {/* Tabs */}
+      <div className="border-b border-border">
+        <nav className="flex gap-1" aria-label="Results tabs">
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === tab.id
+                  ? 'border-accent text-accent'
+                  : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
+              }`}
+              aria-current={activeTab === tab.id ? 'page' : undefined}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </nav>
       </div>
 
-      {/* Sensitivity Analysis */}
-      <SensitivityChart />
+      {/* Tab Content */}
+      <div className="animate-fade-in">
+        {activeTab === 'overview' && (
+          <div className="space-y-6">
+            <NetWorthChart />
+            <BreakevenDisplay />
+            <MortgagePayoffChart />
+          </div>
+        )}
 
-      {/* Calculation timestamp */}
-      <div className="text-center text-sm text-gray-500">
-        Last calculated: {new Date(results.lastCalculated).toLocaleString()}
+        {activeTab === 'details' && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+              <CashFlowSankey />
+              <SunkCostComparison />
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'sensitivity' && (
+          <div className="space-y-6">
+            <SensitivityChart />
+          </div>
+        )}
+
+        {activeTab === 'math' && (
+          <div className="space-y-6">
+            <MathBreakdown />
+          </div>
+        )}
+      </div>
+
+      {/* Footer */}
+      <div className="flex items-center justify-between pt-6 border-t border-border">
+        <p className="text-sm text-muted-foreground">
+          Last calculated: {new Date(results.lastCalculated).toLocaleString()}
+        </p>
+        <div className="flex gap-3">
+          <button
+            onClick={() => setStep('financial')}
+            className="btn-outline text-sm"
+          >
+            Edit Inputs
+          </button>
+          <button
+            onClick={calculate}
+            className="btn-secondary text-sm"
+          >
+            Recalculate
+          </button>
+        </div>
       </div>
     </div>
+  );
+}
+
+function ChartIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+    </svg>
   );
 }

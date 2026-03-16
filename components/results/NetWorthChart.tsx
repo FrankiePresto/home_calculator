@@ -26,6 +26,16 @@ interface ChartDataPoint {
   buyPortfolio: number;
 }
 
+// Design system colors
+const COLORS = {
+  rent: '#0284c7', // info (sky-600)
+  buy: '#059669', // success (emerald-600)
+  buy2: '#9333ea', // purple-600
+  breakeven: '#d97706', // accent (amber-600)
+  grid: '#e7e5e4', // stone-200
+  text: '#57534e', // muted-foreground (stone-500)
+};
+
 export function NetWorthChart() {
   const results = useStore((state) => state.results);
   const buyScenario = useStore((state) => state.buyScenario);
@@ -60,24 +70,24 @@ export function NetWorthChart() {
     if (!active || !payload || !payload.length) return null;
 
     return (
-      <div className="bg-white p-4 shadow-lg rounded-lg border border-gray-200">
-        <p className="font-semibold text-gray-900 mb-2">
+      <div className="bg-card p-4 shadow-lg rounded-xl border border-border">
+        <p className="font-semibold text-foreground mb-2">
           {label === 0 ? 'Initial' : `Year ${label}`}
         </p>
         {payload.map((entry: any, idx: number) => (
           <div key={idx} className="flex justify-between gap-4 text-sm">
             <span style={{ color: entry.color }}>{entry.name}:</span>
-            <span className="font-medium">{formatCurrency(entry.value)}</span>
+            <span className="font-medium tabular-nums">{formatCurrency(entry.value)}</span>
           </div>
         ))}
         {payload.length >= 2 && (
-          <div className="mt-2 pt-2 border-t border-gray-200">
+          <div className="mt-2 pt-2 border-t border-border">
             <div className="flex justify-between gap-4 text-sm">
-              <span className="text-gray-600">Difference:</span>
-              <span className="font-medium">
+              <span className="text-muted-foreground">Difference:</span>
+              <span className="font-medium tabular-nums">
                 {formatCurrency(Math.abs(payload[0].value - payload[1].value))}
                 {' '}
-                <span className={payload[0].value > payload[1].value ? 'text-blue-600' : 'text-green-600'}>
+                <span style={{ color: payload[0].value > payload[1].value ? COLORS.rent : COLORS.buy }}>
                   ({payload[0].value > payload[1].value ? 'Rent' : 'Buy'})
                 </span>
               </span>
@@ -89,8 +99,8 @@ export function NetWorthChart() {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">
+    <div className="card p-6">
+      <h3 className="section-header mb-4">
         Net Worth Over Time
       </h3>
       <div className="h-80">
@@ -99,16 +109,16 @@ export function NetWorthChart() {
             data={chartData}
             margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <CartesianGrid strokeDasharray="3 3" stroke={COLORS.grid} />
             <XAxis
               dataKey="year"
               tickFormatter={(value) => (value === 0 ? 'Now' : `Y${value}`)}
-              stroke="#6b7280"
+              stroke={COLORS.text}
               fontSize={12}
             />
             <YAxis
               tickFormatter={(value) => formatCurrencyCompact(value)}
-              stroke="#6b7280"
+              stroke={COLORS.text}
               fontSize={12}
               width={60}
             />
@@ -121,12 +131,12 @@ export function NetWorthChart() {
             {breakevenYear && breakevenYear > 0 && (
               <ReferenceLine
                 x={Math.round(breakevenYear)}
-                stroke="#f59e0b"
+                stroke={COLORS.breakeven}
                 strokeDasharray="5 5"
                 label={{
                   value: 'Breakeven',
                   position: 'top',
-                  fill: '#f59e0b',
+                  fill: COLORS.breakeven,
                   fontSize: 12,
                 }}
               />
@@ -136,18 +146,18 @@ export function NetWorthChart() {
               type="monotone"
               dataKey="rent"
               name="Rent"
-              stroke="#2563eb"
+              stroke={COLORS.rent}
               strokeWidth={3}
-              dot={{ r: 4, fill: '#2563eb' }}
+              dot={{ r: 4, fill: COLORS.rent }}
               activeDot={{ r: 6 }}
             />
             <Line
               type="monotone"
               dataKey="buy"
               name={buyScenario.name || 'Buy'}
-              stroke="#16a34a"
+              stroke={COLORS.buy}
               strokeWidth={3}
-              dot={{ r: 4, fill: '#16a34a' }}
+              dot={{ r: 4, fill: COLORS.buy }}
               activeDot={{ r: 6 }}
             />
             {buyScenario2 && (
@@ -155,9 +165,9 @@ export function NetWorthChart() {
                 type="monotone"
                 dataKey="buy2"
                 name={buyScenario2.name || 'Buy B'}
-                stroke="#9333ea"
+                stroke={COLORS.buy2}
                 strokeWidth={3}
-                dot={{ r: 4, fill: '#9333ea' }}
+                dot={{ r: 4, fill: COLORS.buy2 }}
                 activeDot={{ r: 6 }}
               />
             )}
@@ -166,13 +176,13 @@ export function NetWorthChart() {
       </div>
 
       {/* Legend explanation */}
-      <div className="mt-4 text-sm text-gray-600">
+      <div className="mt-4 text-sm text-muted-foreground">
         <p>
-          <strong>Net Worth</strong> = Investment Portfolio + Home Equity (for buyers)
+          <strong className="text-foreground">Net Worth</strong> = Investment Portfolio + Home Equity (for buyers)
         </p>
         {breakevenYear && (
-          <p className="mt-1">
-            <span className="inline-block w-3 h-0.5 bg-amber-500 mr-2"></span>
+          <p className="mt-1 flex items-center gap-2">
+            <span className="inline-block w-4 h-0.5 bg-accent" style={{ borderStyle: 'dashed' }}></span>
             Breakeven point at approximately {breakevenYear.toFixed(1)} years
           </p>
         )}

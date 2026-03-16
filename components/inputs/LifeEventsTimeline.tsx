@@ -37,26 +37,26 @@ function LifeEventRow({ event, onUpdate, onRemove, maxYear, isDualIncome }: Life
   }));
 
   return (
-    <div className="flex flex-wrap items-start gap-3 p-4 bg-gray-50 rounded-lg">
+    <div className="flex flex-wrap items-start gap-3 p-4 bg-secondary rounded-lg">
       {/* Description */}
       <div className="flex-1 min-w-[150px]">
-        <label className="block text-xs font-medium text-gray-500 mb-1">Description</label>
+        <label className="block text-xs font-medium text-muted-foreground mb-1">Description</label>
         <input
           type="text"
           value={event.description}
           onChange={(e) => onUpdate({ description: e.target.value })}
-          className="block w-full rounded-md border-0 py-1.5 px-2 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-500 text-sm"
+          className="block w-full rounded-lg border-0 py-1.5 px-2 text-foreground ring-1 ring-inset ring-border placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-accent text-sm"
           placeholder="Event description"
         />
       </div>
 
       {/* Type */}
       <div className="w-32">
-        <label className="block text-xs font-medium text-gray-500 mb-1">Type</label>
+        <label className="block text-xs font-medium text-muted-foreground mb-1">Type</label>
         <select
           value={event.type}
           onChange={(e) => onUpdate({ type: e.target.value as LifeEventType })}
-          className="block w-full rounded-md border-0 py-1.5 px-2 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-blue-500 text-sm"
+          className="block w-full rounded-lg border-0 py-1.5 px-2 text-foreground ring-1 ring-inset ring-border focus:ring-2 focus:ring-inset focus:ring-accent text-sm"
         >
           <option value="one-time">One-time</option>
           <option value="ongoing">Ongoing</option>
@@ -69,11 +69,11 @@ function LifeEventRow({ event, onUpdate, onRemove, maxYear, isDualIncome }: Life
       {event.type === 'one-time' && (
         <>
           <div className="w-28">
-            <label className="block text-xs font-medium text-gray-500 mb-1">Year</label>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">Year</label>
             <select
               value={event.year || 1}
               onChange={(e) => onUpdate({ year: parseInt(e.target.value) })}
-              className="block w-full rounded-md border-0 py-1.5 px-2 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-blue-500 text-sm"
+              className="block w-full rounded-lg border-0 py-1.5 px-2 text-foreground ring-1 ring-inset ring-border focus:ring-2 focus:ring-inset focus:ring-accent text-sm"
             >
               {yearOptions.map((opt) => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -81,9 +81,9 @@ function LifeEventRow({ event, onUpdate, onRemove, maxYear, isDualIncome }: Life
             </select>
           </div>
           <div className="w-32">
-            <label className="block text-xs font-medium text-gray-500 mb-1">Amount</label>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">Amount</label>
             <div className="relative">
-              <span className="absolute left-2 top-1.5 text-gray-500 text-sm">$</span>
+              <span className="absolute left-2 top-1.5 text-muted-foreground text-sm">$</span>
               <input
                 type="number"
                 value={Math.abs(event.amount || 0)}
@@ -98,11 +98,11 @@ function LifeEventRow({ event, onUpdate, onRemove, maxYear, isDualIncome }: Life
       {event.type === 'ongoing' && (
         <>
           <div className="w-28">
-            <label className="block text-xs font-medium text-gray-500 mb-1">Start Year</label>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">Start Year</label>
             <select
               value={event.startYear || 1}
               onChange={(e) => onUpdate({ startYear: parseInt(e.target.value) })}
-              className="block w-full rounded-md border-0 py-1.5 px-2 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-blue-500 text-sm"
+              className="block w-full rounded-lg border-0 py-1.5 px-2 text-foreground ring-1 ring-inset ring-border focus:ring-2 focus:ring-inset focus:ring-accent text-sm"
             >
               {yearOptions.map((opt) => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -110,9 +110,9 @@ function LifeEventRow({ event, onUpdate, onRemove, maxYear, isDualIncome }: Life
             </select>
           </div>
           <div className="w-32">
-            <label className="block text-xs font-medium text-gray-500 mb-1">Monthly Cost</label>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">Monthly Cost</label>
             <div className="relative">
-              <span className="absolute left-2 top-1.5 text-gray-500 text-sm">$</span>
+              <span className="absolute left-2 top-1.5 text-muted-foreground text-sm">$</span>
               <input
                 type="number"
                 value={Math.abs(event.monthlyAmount || 0)}
@@ -127,11 +127,11 @@ function LifeEventRow({ event, onUpdate, onRemove, maxYear, isDualIncome }: Life
       {event.type === 'phase' && (
         <>
           <div className="w-28">
-            <label className="block text-xs font-medium text-gray-500 mb-1">Start Year</label>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">Start Year</label>
             <select
               value={event.startYear || 1}
               onChange={(e) => onUpdate({ startYear: parseInt(e.target.value) })}
-              className="block w-full rounded-md border-0 py-1.5 px-2 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-blue-500 text-sm"
+              className="block w-full rounded-lg border-0 py-1.5 px-2 text-foreground ring-1 ring-inset ring-border focus:ring-2 focus:ring-inset focus:ring-accent text-sm"
             >
               {yearOptions.map((opt) => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -139,11 +139,11 @@ function LifeEventRow({ event, onUpdate, onRemove, maxYear, isDualIncome }: Life
             </select>
           </div>
           <div className="w-28">
-            <label className="block text-xs font-medium text-gray-500 mb-1">End Year</label>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">End Year</label>
             <select
               value={event.endYear || (event.startYear || 1) + 5}
               onChange={(e) => onUpdate({ endYear: parseInt(e.target.value) })}
-              className="block w-full rounded-md border-0 py-1.5 px-2 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-blue-500 text-sm"
+              className="block w-full rounded-lg border-0 py-1.5 px-2 text-foreground ring-1 ring-inset ring-border focus:ring-2 focus:ring-inset focus:ring-accent text-sm"
             >
               {yearOptions
                 .filter((opt) => opt.value > (event.startYear || 1))
@@ -153,9 +153,9 @@ function LifeEventRow({ event, onUpdate, onRemove, maxYear, isDualIncome }: Life
             </select>
           </div>
           <div className="w-32">
-            <label className="block text-xs font-medium text-gray-500 mb-1">Monthly Cost</label>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">Monthly Cost</label>
             <div className="relative">
-              <span className="absolute left-2 top-1.5 text-gray-500 text-sm">$</span>
+              <span className="absolute left-2 top-1.5 text-muted-foreground text-sm">$</span>
               <input
                 type="number"
                 value={Math.abs(event.monthlyAmount || 0)}
@@ -170,7 +170,7 @@ function LifeEventRow({ event, onUpdate, onRemove, maxYear, isDualIncome }: Life
       {event.type === 'income-change' && (
         <>
           <div className="w-32">
-            <label className="block text-xs font-medium text-gray-500 mb-1">Duration</label>
+            <label className="block text-xs font-medium text-muted-foreground mb-1">Duration</label>
             <select
               value={event.incomeChangeDuration || 'ongoing'}
               onChange={(e) => {
@@ -196,7 +196,7 @@ function LifeEventRow({ event, onUpdate, onRemove, maxYear, isDualIncome }: Life
                   });
                 }
               }}
-              className="block w-full rounded-md border-0 py-1.5 px-2 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-blue-500 text-sm"
+              className="block w-full rounded-lg border-0 py-1.5 px-2 text-foreground ring-1 ring-inset ring-border focus:ring-2 focus:ring-inset focus:ring-accent text-sm"
             >
               <option value="ongoing">Ongoing</option>
               <option value="phase">Temporary</option>
@@ -206,11 +206,11 @@ function LifeEventRow({ event, onUpdate, onRemove, maxYear, isDualIncome }: Life
           {/* Earner selector (only for dual income households) */}
           {isDualIncome && (
             <div className="w-28">
-              <label className="block text-xs font-medium text-gray-500 mb-1">Earner</label>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">Earner</label>
               <select
                 value={event.affectedEarner || 'primary'}
                 onChange={(e) => onUpdate({ affectedEarner: e.target.value as 'primary' | 'secondary' })}
-                className="block w-full rounded-md border-0 py-1.5 px-2 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-blue-500 text-sm"
+                className="block w-full rounded-lg border-0 py-1.5 px-2 text-foreground ring-1 ring-inset ring-border focus:ring-2 focus:ring-inset focus:ring-accent text-sm"
               >
                 <option value="primary">Primary</option>
                 <option value="secondary">Secondary</option>
@@ -222,11 +222,11 @@ function LifeEventRow({ event, onUpdate, onRemove, maxYear, isDualIncome }: Life
           {(!event.incomeChangeDuration || event.incomeChangeDuration === 'ongoing') && (
             <>
               <div className="w-28">
-                <label className="block text-xs font-medium text-gray-500 mb-1">Year</label>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">Year</label>
                 <select
                   value={event.year || 1}
                   onChange={(e) => onUpdate({ year: parseInt(e.target.value) })}
-                  className="block w-full rounded-md border-0 py-1.5 px-2 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-blue-500 text-sm"
+                  className="block w-full rounded-lg border-0 py-1.5 px-2 text-foreground ring-1 ring-inset ring-border focus:ring-2 focus:ring-inset focus:ring-accent text-sm"
                 >
                   {yearOptions.map((opt) => (
                     <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -234,7 +234,7 @@ function LifeEventRow({ event, onUpdate, onRemove, maxYear, isDualIncome }: Life
                 </select>
               </div>
               <div className="w-32">
-                <label className="block text-xs font-medium text-gray-500 mb-1">Change %</label>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">Change %</label>
                 <div className="relative">
                   <input
                     type="number"
@@ -242,7 +242,7 @@ function LifeEventRow({ event, onUpdate, onRemove, maxYear, isDualIncome }: Life
                     onChange={(e) => onUpdate({ percentChange: parseFloat(e.target.value) || 0 })}
                     className="block w-full rounded-md border-0 py-1.5 pl-2 pr-6 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-blue-500 text-sm"
                   />
-                  <span className="absolute right-2 top-1.5 text-gray-500 text-sm">%</span>
+                  <span className="absolute right-2 top-1.5 text-muted-foreground text-sm">%</span>
                 </div>
               </div>
             </>
@@ -252,11 +252,11 @@ function LifeEventRow({ event, onUpdate, onRemove, maxYear, isDualIncome }: Life
           {event.incomeChangeDuration === 'phase' && (
             <>
               <div className="w-28">
-                <label className="block text-xs font-medium text-gray-500 mb-1">Start Year</label>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">Start Year</label>
                 <select
                   value={event.startYear || 1}
                   onChange={(e) => onUpdate({ startYear: parseInt(e.target.value) })}
-                  className="block w-full rounded-md border-0 py-1.5 px-2 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-blue-500 text-sm"
+                  className="block w-full rounded-lg border-0 py-1.5 px-2 text-foreground ring-1 ring-inset ring-border focus:ring-2 focus:ring-inset focus:ring-accent text-sm"
                 >
                   {yearOptions.map((opt) => (
                     <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -264,11 +264,11 @@ function LifeEventRow({ event, onUpdate, onRemove, maxYear, isDualIncome }: Life
                 </select>
               </div>
               <div className="w-28">
-                <label className="block text-xs font-medium text-gray-500 mb-1">End Year</label>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">End Year</label>
                 <select
                   value={event.endYear || (event.startYear || 1) + 1}
                   onChange={(e) => onUpdate({ endYear: parseInt(e.target.value) })}
-                  className="block w-full rounded-md border-0 py-1.5 px-2 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-blue-500 text-sm"
+                  className="block w-full rounded-lg border-0 py-1.5 px-2 text-foreground ring-1 ring-inset ring-border focus:ring-2 focus:ring-inset focus:ring-accent text-sm"
                 >
                   {yearOptions
                     .filter((opt) => opt.value >= (event.startYear || 1))
@@ -278,7 +278,7 @@ function LifeEventRow({ event, onUpdate, onRemove, maxYear, isDualIncome }: Life
                 </select>
               </div>
               <div className="w-32">
-                <label className="block text-xs font-medium text-gray-500 mb-1">Income %</label>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">Income %</label>
                 <div className="relative">
                   <input
                     type="number"
@@ -288,7 +288,7 @@ function LifeEventRow({ event, onUpdate, onRemove, maxYear, isDualIncome }: Life
                     max={100}
                     className="block w-full rounded-md border-0 py-1.5 pl-2 pr-6 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-blue-500 text-sm"
                   />
-                  <span className="absolute right-2 top-1.5 text-gray-500 text-sm">%</span>
+                  <span className="absolute right-2 top-1.5 text-muted-foreground text-sm">%</span>
                 </div>
               </div>
             </>
@@ -300,7 +300,7 @@ function LifeEventRow({ event, onUpdate, onRemove, maxYear, isDualIncome }: Life
       <div className="flex items-end">
         <button
           onClick={onRemove}
-          className="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded"
+          className="p-1.5 text-destructive hover:text-destructive/80 hover:bg-destructive/10 rounded"
           title="Remove event"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -356,13 +356,13 @@ export function LifeEventsTimeline() {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
+    <div className="card p-6">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-gray-900">Life Events</h2>
+        <h2 className="section-header">Life Events</h2>
         {lifeEvents.length > 0 && (
           <button
             onClick={clearLifeEvents}
-            className="text-sm text-red-600 hover:text-red-800"
+            className="text-sm text-destructive hover:text-destructive/80"
           >
             Clear All
           </button>
@@ -370,7 +370,7 @@ export function LifeEventsTimeline() {
       </div>
 
       {lifeEvents.length === 0 ? (
-        <p className="text-gray-500 text-sm mb-4">
+        <p className="text-muted-foreground text-sm mb-4">
           Add life events to model future expenses or income changes (optional).
         </p>
       ) : (
@@ -391,7 +391,7 @@ export function LifeEventsTimeline() {
       <div className="flex flex-wrap gap-2">
         <button
           onClick={handleAddEvent}
-          className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          className="btn-outline text-sm"
         >
           <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -402,7 +402,7 @@ export function LifeEventsTimeline() {
         <div className="relative">
           <button
             onClick={() => setShowPresets(!showPresets)}
-            className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="btn-outline text-sm"
           >
             Quick Add
             <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -411,13 +411,13 @@ export function LifeEventsTimeline() {
           </button>
 
           {showPresets && (
-            <div className="absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
+            <div className="absolute left-0 mt-2 w-48 rounded-lg shadow-lg bg-card border border-border z-10">
               <div className="py-1">
                 {PRESETS.map((preset, idx) => (
                   <button
                     key={idx}
                     onClick={() => handleAddPreset(preset)}
-                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    className="block w-full text-left px-4 py-2 text-sm text-foreground hover:bg-secondary"
                   >
                     {preset.description}
                   </button>
