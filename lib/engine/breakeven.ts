@@ -80,6 +80,46 @@ export function findTimeBreakeven(
 }
 
 /**
+ * Find ALL crossover points where buy and rent net worth trajectories cross
+ *
+ * A crossover occurs when the sign of (rent net worth - buy net worth) changes.
+ * Returns them in chronological order.
+ *
+ * @param rentSnapshots - Yearly snapshots from rent scenario
+ * @param buySnapshots - Yearly snapshots from buy scenario
+ * @returns Array of crossover points (may be empty)
+ */
+export function findAllCrossovers(
+  rentSnapshots: YearlySnapshot[],
+  buySnapshots: YearlySnapshot[]
+): TimeBreakeven[] {
+  const crossovers: TimeBreakeven[] = [];
+  const len = Math.min(rentSnapshots.length, buySnapshots.length);
+
+  if (len < 2) return crossovers;
+
+  for (let i = 1; i < len; i++) {
+    const prevDiff = rentSnapshots[i - 1].netWorth - buySnapshots[i - 1].netWorth;
+    const currDiff = rentSnapshots[i].netWorth - buySnapshots[i].netWorth;
+
+    // Detect sign change (crossover)
+    if ((prevDiff > 0 && currDiff <= 0) || (prevDiff < 0 && currDiff >= 0)) {
+      // Interpolate for sub-year precision
+      const fraction = Math.abs(prevDiff) / (Math.abs(prevDiff) + Math.abs(currDiff));
+      const exactYear = i - 1 + fraction;
+
+      crossovers.push({
+        year: i,
+        month: Math.round(fraction * 12),
+        exact: exactYear,
+      });
+    }
+  }
+
+  return crossovers;
+}
+
+/**
  * Find the rent that would make buying and renting equivalent at a target year
  * Uses binary search for efficiency
  *
@@ -244,8 +284,10 @@ export function calculateBreakeven(
     timeframeYears
   );
 
-  // Find time breakeven
-  const timeBreakeven = findTimeBreakeven(rentResult.snapshots, buyResult.snapshots);
+  // Find all crossover points
+  const crossovers = findAllCrossovers(rentResult.snapshots, buyResult.snapshots);
+  const timeBreakeven = crossovers[0] ?? null;
+  const secondCrossover = crossovers[1] ?? null;
 
   // Find rent breakeven at the timeframe horizon
   const rentBreakeven = findRentBreakeven(
@@ -258,6 +300,7 @@ export function calculateBreakeven(
 
   return {
     timeBreakeven,
+    secondCrossover,
     rentBreakeven,
   };
 }

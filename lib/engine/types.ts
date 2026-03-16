@@ -174,6 +174,7 @@ export interface TimeBreakeven {
 
 export interface BreakevenResult {
   timeBreakeven: TimeBreakeven | null; // null if never breaks even
+  secondCrossover: TimeBreakeven | null; // null if trajectories don't cross back
   rentBreakeven: number | null;        // Monthly rent that equals buying
 }
 

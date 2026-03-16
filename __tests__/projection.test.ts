@@ -401,6 +401,45 @@ describe('projectScenarios', () => {
   });
 });
 
+describe('mortgage math in projections', () => {
+  it('mortgage fully paid off at amortization year end', () => {
+    const result = projectBuyScenario(baseProfile, baseBuyScenario, [], 25);
+
+    // By year 25 (the amortization period), mortgage should be zero
+    expect(result.snapshots[25].mortgageBalance).toBeCloseTo(0, 0);
+  });
+
+  it('total principal paid equals original loan amount', () => {
+    const result = projectBuyScenario(baseProfile, baseBuyScenario, [], 25);
+
+    let totalPrincipal = 0;
+    for (let i = 1; i <= 25; i++) {
+      totalPrincipal += result.snapshots[i].cashFlow.toMortgagePrincipal;
+    }
+
+    // Original loan: 600000 * 0.80 = 480000
+    expect(totalPrincipal).toBeCloseTo(480000, -2);
+  });
+
+  it('netWorth equals portfolio + nonInvestedSavings + homeEquity at every year', () => {
+    const result = projectBuyScenario(baseProfile, baseBuyScenario, [], 15);
+
+    for (const snap of result.snapshots) {
+      const expected = snap.investmentPortfolio + snap.nonInvestedSavingsBalance + snap.homeEquity;
+      expect(snap.netWorth).toBeCloseTo(expected, 0);
+    }
+  });
+
+  it('netWorth equals portfolio + nonInvestedSavings for rent at every year', () => {
+    const result = projectRentScenario(baseProfile, baseRentScenario, [], 15);
+
+    for (const snap of result.snapshots) {
+      const expected = snap.investmentPortfolio + snap.nonInvestedSavingsBalance;
+      expect(snap.netWorth).toBeCloseTo(expected, 0);
+    }
+  });
+});
+
 describe('edge cases', () => {
   it('handles 0% investment return', () => {
     const noReturnProfile: FinancialProfile = {

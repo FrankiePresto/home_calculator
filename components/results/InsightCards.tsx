@@ -91,7 +91,9 @@ export function InsightCards() {
           </p>
           <p className="mt-1 text-sm text-gray-600">
             {breakeven?.timeBreakeven
-              ? 'until buying wins'
+              ? breakeven.secondCrossover
+                ? 'until buying temporarily leads'
+                : 'until buying wins'
               : `within ${timeframe} years`}
           </p>
         </div>
@@ -167,7 +169,13 @@ export function InsightCards() {
         <p className={`text-sm ${winner === 'rent' ? 'text-blue-800' : 'text-green-800'}`}>
           <strong>Bottom Line:</strong>{' '}
           {winner === 'rent' ? (
-            breakeven?.timeBreakeven ? (
+            breakeven?.timeBreakeven && breakeven.secondCrossover ? (
+              <>
+                Buying temporarily overtakes renting after {formatYears(breakeven.timeBreakeven.exact, false)},
+                but renting catches back up around {formatYears(breakeven.secondCrossover.exact, false)}.
+                Over {timeframe} years, renting wins by {formatCurrency(difference)}.
+              </>
+            ) : breakeven?.timeBreakeven ? (
               <>
                 If you plan to stay less than {formatYears(breakeven.timeBreakeven.exact, false)},
                 renting is better. After that, buying the {buyScenario.name} wins.

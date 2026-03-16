@@ -39,6 +39,7 @@ export function BreakevenDisplay() {
 
     return {
       timeBreakeven: breakeven.timeBreakeven,
+      secondCrossover: breakeven.secondCrossover,
       rentBreakeven: breakeven.rentBreakeven,
       rentFinal,
       buyFinal,
@@ -70,7 +71,9 @@ export function BreakevenDisplay() {
                   {formatYears(analysis.timeBreakeven.exact, true)}
                 </p>
                 <p className="text-sm text-amber-700 mt-1">
-                  After this point, buying becomes more advantageous than renting.
+                  {analysis.secondCrossover
+                    ? `Buying temporarily leads after this point, but renting catches back up around ${formatYears(analysis.secondCrossover.exact, true)}.`
+                    : 'After this point, buying becomes more advantageous than renting.'}
                 </p>
               </>
             ) : (
@@ -97,9 +100,17 @@ export function BreakevenDisplay() {
                 <li className="flex items-start gap-2">
                   <span className="text-green-500 mt-0.5">→</span>
                   <span>
-                    <strong>Stay &gt; {Math.ceil(analysis.timeBreakeven.exact)} years:</strong> Buy is better
+                    <strong>Stay {Math.ceil(analysis.timeBreakeven.exact)}–{analysis.secondCrossover ? Math.floor(analysis.secondCrossover.exact) : `${Math.ceil(analysis.timeBreakeven.exact)}+`} years:</strong> Buy is better
                   </span>
                 </li>
+                {analysis.secondCrossover && (
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-500 mt-0.5">→</span>
+                    <span>
+                      <strong>Stay &gt; {Math.ceil(analysis.secondCrossover.exact)} years:</strong> Rent is better again
+                    </span>
+                  </li>
+                )}
               </ul>
             ) : (
               <p className="text-sm text-gray-600">

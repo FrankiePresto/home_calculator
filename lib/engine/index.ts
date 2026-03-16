@@ -42,6 +42,7 @@ export {
 // Breakeven calculations
 export {
   findTimeBreakeven,
+  findAllCrossovers,
   findRentBreakeven,
   findPriceBreakeven,
   calculateBreakeven,
