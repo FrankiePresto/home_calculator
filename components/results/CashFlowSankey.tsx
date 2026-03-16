@@ -42,44 +42,44 @@ export function CashFlowSankey() {
 
   if (selectedScenario === 'rent') {
     if (cashFlowData.sunkCosts.rent > 0) {
-      sunkItems.push({ label: 'Rent', value: cashFlowData.sunkCosts.rent, color: '#3b82f6', type: 'sunk' });
+      sunkItems.push({ label: 'Rent', value: cashFlowData.sunkCosts.rent, color: 'rgb(2 132 199)', type: 'sunk' });
     }
     if (cashFlowData.sunkCosts.homeInsurance > 0) {
-      sunkItems.push({ label: 'Insurance', value: cashFlowData.sunkCosts.homeInsurance, color: '#eab308', type: 'sunk' });
+      sunkItems.push({ label: 'Insurance', value: cashFlowData.sunkCosts.homeInsurance, color: 'rgb(234 179 8)', type: 'sunk' });
     }
   } else {
     if (cashFlowData.sunkCosts.mortgageInterest > 0) {
-      sunkItems.push({ label: 'Mortgage Interest', value: cashFlowData.sunkCosts.mortgageInterest, color: '#ef4444', type: 'sunk' });
+      sunkItems.push({ label: 'Mortgage Interest', value: cashFlowData.sunkCosts.mortgageInterest, color: 'rgb(225 29 72)', type: 'sunk' });
     }
     if (cashFlowData.sunkCosts.propertyTax > 0) {
-      sunkItems.push({ label: 'Property Tax', value: cashFlowData.sunkCosts.propertyTax, color: '#f97316', type: 'sunk' });
+      sunkItems.push({ label: 'Property Tax', value: cashFlowData.sunkCosts.propertyTax, color: 'rgb(249 115 22)', type: 'sunk' });
     }
     if (cashFlowData.sunkCosts.homeInsurance > 0) {
-      sunkItems.push({ label: 'Home Insurance', value: cashFlowData.sunkCosts.homeInsurance, color: '#eab308', type: 'sunk' });
+      sunkItems.push({ label: 'Home Insurance', value: cashFlowData.sunkCosts.homeInsurance, color: 'rgb(234 179 8)', type: 'sunk' });
     }
     if (cashFlowData.sunkCosts.maintenance > 0) {
-      sunkItems.push({ label: 'Maintenance', value: cashFlowData.sunkCosts.maintenance, color: '#84cc16', type: 'sunk' });
+      sunkItems.push({ label: 'Maintenance', value: cashFlowData.sunkCosts.maintenance, color: 'rgb(132 204 22)', type: 'sunk' });
     }
     if (cashFlowData.sunkCosts.strataFees > 0) {
-      sunkItems.push({ label: 'Strata/HOA', value: cashFlowData.sunkCosts.strataFees, color: '#22c55e', type: 'sunk' });
+      sunkItems.push({ label: 'Strata/HOA', value: cashFlowData.sunkCosts.strataFees, color: 'rgb(34 197 94)', type: 'sunk' });
     }
     if (cashFlowData.wealthBuilding.mortgagePrincipal > 0) {
-      wealthItems.push({ label: 'Mortgage Principal', value: cashFlowData.wealthBuilding.mortgagePrincipal, color: '#10b981', type: 'wealth' });
+      wealthItems.push({ label: 'Mortgage Principal', value: cashFlowData.wealthBuilding.mortgagePrincipal, color: 'rgb(5 150 105)', type: 'wealth' });
     }
   }
 
   // Common items
   if (cashFlowData.sunkCosts.utilities > 0) {
-    sunkItems.push({ label: 'Utilities', value: cashFlowData.sunkCosts.utilities, color: '#06b6d4', type: 'sunk' });
+    sunkItems.push({ label: 'Utilities', value: cashFlowData.sunkCosts.utilities, color: 'rgb(6 182 212)', type: 'sunk' });
   }
   if (cashFlowData.sunkCosts.otherExpenses > 0) {
-    sunkItems.push({ label: 'Living Expenses', value: cashFlowData.sunkCosts.otherExpenses, color: '#8b5cf6', type: 'sunk' });
+    sunkItems.push({ label: 'Living Expenses', value: cashFlowData.sunkCosts.otherExpenses, color: 'rgb(139 92 246)', type: 'sunk' });
   }
   if (cashFlowData.sunkCosts.lifeEventExpenses > 0) {
-    sunkItems.push({ label: 'Life Events', value: cashFlowData.sunkCosts.lifeEventExpenses, color: '#ec4899', type: 'sunk' });
+    sunkItems.push({ label: 'Life Events', value: cashFlowData.sunkCosts.lifeEventExpenses, color: 'rgb(236 72 153)', type: 'sunk' });
   }
   if (cashFlowData.wealthBuilding.investments > 0) {
-    wealthItems.push({ label: 'Investments', value: cashFlowData.wealthBuilding.investments, color: '#2563eb', type: 'wealth' });
+    wealthItems.push({ label: 'Investments', value: cashFlowData.wealthBuilding.investments, color: 'rgb(2 132 199)', type: 'wealth' });
   }
 
   const maxValue = Math.max(
@@ -94,30 +94,30 @@ export function CashFlowSankey() {
   const unaccounted = totalIncome - cashFlowData.totalSunk - cashFlowData.totalWealth;
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">
+    <div className="card p-6">
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <h3 className="section-header">
           Cash Flow Breakdown
         </h3>
         <div className="flex items-center gap-4">
           {/* Scenario toggle */}
-          <div className="flex rounded-md shadow-sm">
+          <div className="flex rounded-lg overflow-hidden border border-border">
             <button
               onClick={() => setSelectedScenario('rent')}
-              className={`px-3 py-1.5 text-sm font-medium rounded-l-md border ${
+              className={`px-4 py-2 text-sm font-medium transition-colors ${
                 selectedScenario === 'rent'
-                  ? 'bg-blue-50 text-blue-700 border-blue-300'
-                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                  ? 'bg-info text-info-foreground'
+                  : 'bg-background text-foreground hover:bg-secondary'
               }`}
             >
               Rent
             </button>
             <button
               onClick={() => setSelectedScenario('buy')}
-              className={`px-3 py-1.5 text-sm font-medium rounded-r-md border-t border-r border-b ${
+              className={`px-4 py-2 text-sm font-medium transition-colors ${
                 selectedScenario === 'buy'
-                  ? 'bg-green-50 text-green-700 border-green-300'
-                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                  ? 'bg-success text-success-foreground'
+                  : 'bg-background text-foreground hover:bg-secondary'
               }`}
             >
               Buy
@@ -128,7 +128,7 @@ export function CashFlowSankey() {
           <select
             value={selectedYear}
             onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-            className="rounded-md border-gray-300 text-sm"
+            className="rounded-lg border border-border bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-accent focus:ring-offset-2"
           >
             {Array.from({ length: timeframe }, (_, i) => (
               <option key={i + 1} value={i + 1}>
@@ -140,15 +140,15 @@ export function CashFlowSankey() {
       </div>
 
       {/* Income header */}
-      <div className="mb-6 p-4 bg-gray-100 rounded-lg">
+      <div className="mb-6 p-5 bg-secondary rounded-xl">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-gray-600">Annual {financialProfile.includeTaxes ? 'Net' : 'Gross'} Income</p>
-            <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalIncome)}</p>
+            <p className="text-sm text-muted-foreground">Annual {financialProfile.includeTaxes ? 'Net' : 'Gross'} Income</p>
+            <p className="text-2xl font-bold text-foreground tabular-nums">{formatCurrency(totalIncome)}</p>
           </div>
           <div className="text-right">
-            <p className="text-sm text-gray-600">Year {selectedYear}</p>
-            <p className="text-lg font-semibold text-gray-700">
+            <p className="text-sm text-muted-foreground">Year {selectedYear}</p>
+            <p className={`text-lg font-semibold ${selectedScenario === 'rent' ? 'text-info' : 'text-success'}`}>
               {selectedScenario === 'rent' ? 'Renting' : 'Buying'}
             </p>
           </div>
@@ -156,24 +156,24 @@ export function CashFlowSankey() {
       </div>
 
       {/* Monthly Cash Flow Summary */}
-      <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-        <p className="text-sm font-medium text-blue-700 mb-2">Monthly Cash Flow</p>
-        <div className="grid grid-cols-4 gap-4 text-sm">
+      <div className="mb-6 p-4 bg-info/10 border border-info/20 rounded-xl">
+        <p className="text-sm font-medium text-info mb-3">Monthly Cash Flow</p>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
           <div>
-            <p className="text-blue-600">{financialProfile.includeTaxes ? 'Net ' : ''}Income</p>
-            <p className="font-semibold text-blue-900">{formatCurrency(totalIncome / 12)}/mo</p>
+            <p className="text-info/80">{financialProfile.includeTaxes ? 'Net ' : ''}Income</p>
+            <p className="font-semibold text-info tabular-nums">{formatCurrency(totalIncome / 12)}/mo</p>
           </div>
           <div>
-            <p className="text-red-600">Sunk Costs</p>
-            <p className="font-semibold text-red-700">-{formatCurrency(cashFlowData.totalSunk / 12)}/mo</p>
+            <p className="text-destructive/80">Sunk Costs</p>
+            <p className="font-semibold text-destructive tabular-nums">-{formatCurrency(cashFlowData.totalSunk / 12)}/mo</p>
           </div>
           <div>
-            <p className="text-green-600">Wealth Building</p>
-            <p className="font-semibold text-green-700">+{formatCurrency(cashFlowData.totalWealth / 12)}/mo</p>
+            <p className="text-success/80">Wealth Building</p>
+            <p className="font-semibold text-success tabular-nums">+{formatCurrency(cashFlowData.totalWealth / 12)}/mo</p>
           </div>
           <div>
-            <p className="text-gray-600">Remaining</p>
-            <p className="font-semibold text-gray-700">{formatCurrency((totalIncome - cashFlowData.totalSunk - cashFlowData.totalWealth) / 12)}/mo</p>
+            <p className="text-muted-foreground">Remaining</p>
+            <p className="font-semibold text-foreground tabular-nums">{formatCurrency((totalIncome - cashFlowData.totalSunk - cashFlowData.totalWealth) / 12)}/mo</p>
           </div>
         </div>
       </div>
@@ -187,21 +187,21 @@ export function CashFlowSankey() {
         const principalPercent = (monthlyPrincipal / monthlyPayment) * 100;
 
         return (
-          <div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm font-medium text-gray-700">Monthly Mortgage Payment</p>
-              <p className="text-lg font-bold text-gray-900">{formatCurrency(monthlyPayment)}</p>
+          <div className="mb-6 p-4 bg-secondary rounded-xl">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-sm font-medium text-foreground">Monthly Mortgage Payment</p>
+              <p className="text-lg font-bold text-foreground tabular-nums">{formatCurrency(monthlyPayment)}</p>
             </div>
-            <div className="h-6 flex rounded overflow-hidden">
+            <div className="h-6 flex rounded-lg overflow-hidden">
               <div
-                className="bg-red-400 flex items-center justify-center text-xs font-medium text-white transition-all duration-300"
+                className="bg-destructive/80 flex items-center justify-center text-xs font-medium text-destructive-foreground transition-all duration-300"
                 style={{ width: `${interestPercent}%` }}
                 title={`Interest: ${formatCurrency(monthlyInterest)}`}
               >
                 {interestPercent > 20 && `${interestPercent.toFixed(0)}%`}
               </div>
               <div
-                className="bg-green-500 flex items-center justify-center text-xs font-medium text-white transition-all duration-300"
+                className="bg-success flex items-center justify-center text-xs font-medium text-success-foreground transition-all duration-300"
                 style={{ width: `${principalPercent}%` }}
                 title={`Principal: ${formatCurrency(monthlyPrincipal)}`}
               >
@@ -209,10 +209,10 @@ export function CashFlowSankey() {
               </div>
             </div>
             <div className="flex justify-between mt-2 text-xs">
-              <span className="text-red-600">
+              <span className="text-destructive">
                 Interest: {formatCurrency(monthlyInterest)} ({interestPercent.toFixed(0)}%)
               </span>
-              <span className="text-green-600">
+              <span className="text-success">
                 Principal: {formatCurrency(monthlyPrincipal)} ({principalPercent.toFixed(0)}%)
               </span>
             </div>
@@ -224,35 +224,35 @@ export function CashFlowSankey() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Sunk Costs */}
         <div>
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-3 h-3 rounded-full bg-red-500"></div>
-            <h4 className="font-semibold text-gray-700">Sunk Costs</h4>
-            <span className="text-sm text-gray-500">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-3 h-3 rounded-full bg-destructive"></div>
+            <h4 className="font-semibold text-foreground">Sunk Costs</h4>
+            <span className="text-sm text-muted-foreground">
               ({sunkPercent.toFixed(0)}% of income)
             </span>
           </div>
           <div className="space-y-2">
             {sunkItems.map((item, idx) => (
               <div key={idx} className="flex items-center gap-3">
-                <div className="w-32 text-sm text-gray-600 truncate">{item.label}</div>
-                <div className="flex-1 h-6 bg-gray-100 rounded overflow-hidden">
+                <div className="w-32 text-sm text-muted-foreground truncate">{item.label}</div>
+                <div className="flex-1 h-6 bg-secondary rounded-lg overflow-hidden">
                   <div
-                    className="h-full rounded transition-all duration-300"
+                    className="h-full rounded-lg transition-all duration-300"
                     style={{
                       width: `${(item.value / maxValue) * 100}%`,
                       backgroundColor: item.color,
                     }}
                   />
                 </div>
-                <div className="w-24 text-sm font-medium text-right">
+                <div className="w-24 text-sm font-medium text-right tabular-nums">
                   {formatCurrency(item.value)}
                 </div>
               </div>
             ))}
-            <div className="pt-2 mt-2 border-t border-gray-200 flex items-center gap-3">
-              <div className="w-32 text-sm font-semibold text-gray-700">Total Sunk</div>
+            <div className="pt-3 mt-3 border-t border-border flex items-center gap-3">
+              <div className="w-32 text-sm font-semibold text-foreground">Total Sunk</div>
               <div className="flex-1"></div>
-              <div className="w-24 text-sm font-bold text-red-600 text-right">
+              <div className="w-24 text-sm font-bold text-destructive text-right tabular-nums">
                 {formatCurrency(cashFlowData.totalSunk)}
               </div>
             </div>
@@ -261,10 +261,10 @@ export function CashFlowSankey() {
 
         {/* Wealth Building */}
         <div>
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-3 h-3 rounded-full bg-green-500"></div>
-            <h4 className="font-semibold text-gray-700">Wealth Building</h4>
-            <span className="text-sm text-gray-500">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-3 h-3 rounded-full bg-success"></div>
+            <h4 className="font-semibold text-foreground">Wealth Building</h4>
+            <span className="text-sm text-muted-foreground">
               ({wealthPercent.toFixed(0)}% of income)
             </span>
           </div>
@@ -272,28 +272,28 @@ export function CashFlowSankey() {
             {wealthItems.length > 0 ? (
               wealthItems.map((item, idx) => (
                 <div key={idx} className="flex items-center gap-3">
-                  <div className="w-32 text-sm text-gray-600 truncate">{item.label}</div>
-                  <div className="flex-1 h-6 bg-gray-100 rounded overflow-hidden">
+                  <div className="w-32 text-sm text-muted-foreground truncate">{item.label}</div>
+                  <div className="flex-1 h-6 bg-secondary rounded-lg overflow-hidden">
                     <div
-                      className="h-full rounded transition-all duration-300"
+                      className="h-full rounded-lg transition-all duration-300"
                       style={{
                         width: `${(item.value / maxValue) * 100}%`,
                         backgroundColor: item.color,
                       }}
                     />
                   </div>
-                  <div className="w-24 text-sm font-medium text-right">
+                  <div className="w-24 text-sm font-medium text-right tabular-nums">
                     {formatCurrency(item.value)}
                   </div>
                 </div>
               ))
             ) : (
-              <p className="text-sm text-gray-500 italic">No wealth building this year</p>
+              <p className="text-sm text-muted-foreground italic">No wealth building this year</p>
             )}
-            <div className="pt-2 mt-2 border-t border-gray-200 flex items-center gap-3">
-              <div className="w-32 text-sm font-semibold text-gray-700">Total Wealth</div>
+            <div className="pt-3 mt-3 border-t border-border flex items-center gap-3">
+              <div className="w-32 text-sm font-semibold text-foreground">Total Wealth</div>
               <div className="flex-1"></div>
-              <div className="w-24 text-sm font-bold text-green-600 text-right">
+              <div className="w-24 text-sm font-bold text-success text-right tabular-nums">
                 {formatCurrency(cashFlowData.totalWealth)}
               </div>
             </div>
@@ -302,18 +302,18 @@ export function CashFlowSankey() {
       </div>
 
       {/* Summary bar */}
-      <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-        <p className="text-sm text-gray-600 mb-2">Income Allocation</p>
+      <div className="mt-6 p-5 bg-secondary rounded-xl">
+        <p className="text-sm text-muted-foreground mb-3">Income Allocation</p>
         <div className="h-8 flex rounded-lg overflow-hidden">
           <div
-            className="bg-red-400 flex items-center justify-center text-xs font-medium text-white"
+            className="bg-destructive/80 flex items-center justify-center text-xs font-medium text-destructive-foreground"
             style={{ width: `${sunkPercent}%` }}
             title={`Sunk Costs: ${sunkPercent.toFixed(1)}%`}
           >
             {sunkPercent > 15 && `${sunkPercent.toFixed(0)}%`}
           </div>
           <div
-            className="bg-green-500 flex items-center justify-center text-xs font-medium text-white"
+            className="bg-success flex items-center justify-center text-xs font-medium text-success-foreground"
             style={{ width: `${wealthPercent}%` }}
             title={`Wealth Building: ${wealthPercent.toFixed(1)}%`}
           >
@@ -321,7 +321,7 @@ export function CashFlowSankey() {
           </div>
           {unaccounted > 0 && (
             <div
-              className="bg-gray-300 flex items-center justify-center text-xs font-medium text-gray-600"
+              className="bg-muted flex items-center justify-center text-xs font-medium text-muted-foreground"
               style={{ width: `${(unaccounted / totalIncome) * 100}%` }}
               title={financialProfile.includeTaxes ? "Remaining Funds" : "Unallocated/Tax"}
             >
@@ -329,10 +329,10 @@ export function CashFlowSankey() {
             </div>
           )}
         </div>
-        <div className="flex justify-between mt-2 text-xs text-gray-500">
-          <span>Sunk: {formatCurrency(cashFlowData.totalSunk)}</span>
-          <span>Wealth: {formatCurrency(cashFlowData.totalWealth)}</span>
-          {unaccounted > 0 && <span>{financialProfile.includeTaxes ? 'Remaining' : 'Other'}: {formatCurrency(unaccounted)}</span>}
+        <div className="flex justify-between mt-3 text-xs text-muted-foreground">
+          <span className="tabular-nums">Sunk: {formatCurrency(cashFlowData.totalSunk)}</span>
+          <span className="tabular-nums">Wealth: {formatCurrency(cashFlowData.totalWealth)}</span>
+          {unaccounted > 0 && <span className="tabular-nums">{financialProfile.includeTaxes ? 'Remaining' : 'Other'}: {formatCurrency(unaccounted)}</span>}
         </div>
       </div>
     </div>

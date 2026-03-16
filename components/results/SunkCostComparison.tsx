@@ -91,18 +91,18 @@ export function SunkCostComparison() {
       if (!data) return null;
 
       return (
-        <div className="bg-white p-4 shadow-lg rounded-lg border border-gray-200">
-          <p className="font-semibold text-gray-900 mb-2">{data.name} Scenario</p>
+        <div className="bg-card p-4 shadow-lg rounded-lg border border-border">
+          <p className="font-semibold text-foreground mb-2">{data.name} Scenario</p>
           {payload.filter((p: any) => p.value > 0).map((entry: any, idx: number) => (
             <div key={idx} className="flex justify-between gap-4 text-sm">
               <span style={{ color: entry.color }}>{entry.name}:</span>
-              <span className="font-medium">{formatCurrency(entry.value)}</span>
+              <span className="font-medium tabular-nums">{formatCurrency(entry.value)}</span>
             </div>
           ))}
-          <div className="mt-2 pt-2 border-t border-gray-200">
+          <div className="mt-2 pt-2 border-t border-border">
             <div className="flex justify-between gap-4 text-sm font-semibold">
               <span>Total Sunk:</span>
-              <span>{formatCurrency(data.total)}</span>
+              <span className="tabular-nums">{formatCurrency(data.total)}</span>
             </div>
           </div>
         </div>
@@ -110,12 +110,12 @@ export function SunkCostComparison() {
     }
 
     return (
-      <div className="bg-white p-4 shadow-lg rounded-lg border border-gray-200">
-        <p className="font-semibold text-gray-900 mb-2">Year {label}</p>
+      <div className="bg-card p-4 shadow-lg rounded-lg border border-border">
+        <p className="font-semibold text-foreground mb-2">Year {label}</p>
         {payload.map((entry: any, idx: number) => (
           <div key={idx} className="flex justify-between gap-4 text-sm">
             <span style={{ color: entry.color }}>{entry.name}:</span>
-            <span className="font-medium">{formatCurrency(entry.value)}</span>
+            <span className="font-medium tabular-nums">{formatCurrency(entry.value)}</span>
           </div>
         ))}
       </div>
@@ -123,30 +123,30 @@ export function SunkCostComparison() {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">
+    <div className="card p-6">
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <h3 className="section-header">
           Sunk Costs Comparison
         </h3>
         <div className="flex items-center gap-4">
           {/* View mode toggle */}
-          <div className="flex rounded-md shadow-sm">
+          <div className="flex rounded-lg overflow-hidden border border-border">
             <button
               onClick={() => setViewMode('annual')}
-              className={`px-3 py-1.5 text-sm font-medium rounded-l-md border ${
+              className={`px-4 py-2 text-sm font-medium transition-colors ${
                 viewMode === 'annual'
-                  ? 'bg-blue-50 text-blue-700 border-blue-300'
-                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                  ? 'bg-accent text-accent-foreground'
+                  : 'bg-background text-foreground hover:bg-secondary'
               }`}
             >
               Single Year
             </button>
             <button
               onClick={() => setViewMode('cumulative')}
-              className={`px-3 py-1.5 text-sm font-medium rounded-r-md border-t border-r border-b ${
+              className={`px-4 py-2 text-sm font-medium transition-colors ${
                 viewMode === 'cumulative'
-                  ? 'bg-blue-50 text-blue-700 border-blue-300'
-                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                  ? 'bg-accent text-accent-foreground'
+                  : 'bg-background text-foreground hover:bg-secondary'
               }`}
             >
               Cumulative
@@ -158,7 +158,7 @@ export function SunkCostComparison() {
             <select
               value={selectedYear}
               onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-              className="rounded-md border-gray-300 text-sm"
+              className="rounded-lg border border-border bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-accent focus:ring-offset-2"
             >
               {Array.from({ length: timeframe }, (_, i) => (
                 <option key={i + 1} value={i + 1}>
@@ -178,17 +178,17 @@ export function SunkCostComparison() {
               layout="vertical"
               margin={{ top: 5, right: 30, left: 50, bottom: 5 }}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgb(214 211 209)" />
               <XAxis
                 type="number"
                 tickFormatter={(value) => formatCurrencyCompact(value)}
-                stroke="#6b7280"
+                stroke="rgb(87 83 78)"
                 fontSize={12}
               />
               <YAxis
                 type="category"
                 dataKey="name"
-                stroke="#6b7280"
+                stroke="rgb(87 83 78)"
                 fontSize={12}
                 width={50}
               />
@@ -196,38 +196,38 @@ export function SunkCostComparison() {
               <Legend />
 
               {/* Rent bars */}
-              <Bar dataKey="rent" name="Rent" stackId="stack" fill="#3b82f6" />
+              <Bar dataKey="rent" name="Rent" stackId="stack" fill="rgb(2 132 199)" />
 
               {/* Buy bars */}
-              <Bar dataKey="interest" name="Interest" stackId="stack" fill="#ef4444" />
-              <Bar dataKey="propertyTax" name="Property Tax" stackId="stack" fill="#f97316" />
-              <Bar dataKey="insurance" name="Insurance" stackId="stack" fill="#eab308" />
-              <Bar dataKey="maintenance" name="Maintenance" stackId="stack" fill="#84cc16" />
-              <Bar dataKey="strata" name="Strata/HOA" stackId="stack" fill="#22c55e" />
-              <Bar dataKey="utilities" name="Utilities" stackId="stack" fill="#06b6d4" />
-              <Bar dataKey="other" name="Other" stackId="stack" fill="#8b5cf6" />
+              <Bar dataKey="interest" name="Interest" stackId="stack" fill="rgb(225 29 72)" />
+              <Bar dataKey="propertyTax" name="Property Tax" stackId="stack" fill="rgb(249 115 22)" />
+              <Bar dataKey="insurance" name="Insurance" stackId="stack" fill="rgb(234 179 8)" />
+              <Bar dataKey="maintenance" name="Maintenance" stackId="stack" fill="rgb(132 204 22)" />
+              <Bar dataKey="strata" name="Strata/HOA" stackId="stack" fill="rgb(34 197 94)" />
+              <Bar dataKey="utilities" name="Utilities" stackId="stack" fill="rgb(6 182 212)" />
+              <Bar dataKey="other" name="Other" stackId="stack" fill="rgb(139 92 246)" />
             </BarChart>
           ) : (
             <BarChart
               data={chartData}
               margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgb(214 211 209)" />
               <XAxis
                 dataKey="year"
                 tickFormatter={(value) => `Y${value}`}
-                stroke="#6b7280"
+                stroke="rgb(87 83 78)"
                 fontSize={12}
               />
               <YAxis
                 tickFormatter={(value) => formatCurrencyCompact(value)}
-                stroke="#6b7280"
+                stroke="rgb(87 83 78)"
                 fontSize={12}
               />
               <Tooltip content={<CustomTooltip />} />
               <Legend />
-              <Bar dataKey="rent" name="Rent (Cumulative)" fill="#2563eb" />
-              <Bar dataKey="buy" name="Buy (Cumulative)" fill="#16a34a" />
+              <Bar dataKey="rent" name="Rent (Cumulative)" fill="rgb(2 132 199)" />
+              <Bar dataKey="buy" name="Buy (Cumulative)" fill="rgb(5 150 105)" />
             </BarChart>
           )}
         </ResponsiveContainer>
@@ -235,25 +235,25 @@ export function SunkCostComparison() {
 
       {/* Summary */}
       {viewMode === 'annual' && chartData.length === 2 && (
-        <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+        <div className="mt-4 p-4 bg-secondary rounded-lg">
           <div className="flex justify-between text-sm">
-            <span>Rent sunk costs (Year {selectedYear}):</span>
-            <span className="font-semibold text-blue-600">
+            <span className="text-muted-foreground">Rent sunk costs (Year {selectedYear}):</span>
+            <span className="font-semibold text-info tabular-nums">
               {formatCurrency((chartData[0] as any).total)}
             </span>
           </div>
           <div className="flex justify-between text-sm">
-            <span>Buy sunk costs (Year {selectedYear}):</span>
-            <span className="font-semibold text-green-600">
+            <span className="text-muted-foreground">Buy sunk costs (Year {selectedYear}):</span>
+            <span className="font-semibold text-success tabular-nums">
               {formatCurrency((chartData[1] as any).total)}
             </span>
           </div>
-          <div className="flex justify-between text-sm mt-2 pt-2 border-t border-gray-200">
-            <span>Difference:</span>
-            <span className="font-semibold">
+          <div className="flex justify-between text-sm mt-2 pt-2 border-t border-border">
+            <span className="text-muted-foreground">Difference:</span>
+            <span className="font-semibold tabular-nums">
               {formatCurrency(Math.abs((chartData[0] as any).total - (chartData[1] as any).total))}
               {' '}
-              <span className={(chartData[0] as any).total > (chartData[1] as any).total ? 'text-green-600' : 'text-blue-600'}>
+              <span className={(chartData[0] as any).total > (chartData[1] as any).total ? 'text-success' : 'text-info'}>
                 ({(chartData[0] as any).total > (chartData[1] as any).total ? 'Buy lower' : 'Rent lower'})
               </span>
             </span>
@@ -261,8 +261,8 @@ export function SunkCostComparison() {
         </div>
       )}
 
-      <p className="mt-4 text-sm text-gray-600">
-        <strong>Sunk costs</strong> are expenses that don't build wealth (rent, interest, taxes, maintenance).
+      <p className="mt-4 text-sm text-muted-foreground">
+        <strong className="text-foreground">Sunk costs</strong> are expenses that don't build wealth (rent, interest, taxes, maintenance).
         Lower sunk costs mean more money available for investing.
       </p>
     </div>
