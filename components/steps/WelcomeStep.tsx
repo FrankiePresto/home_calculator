@@ -72,7 +72,7 @@ export function WelcomeStep() {
       )}
 
       {/* What you'll need */}
-      <div className="text-left bg-secondary/50 rounded-xl p-6 mb-8">
+      <div className="text-left bg-secondary/50 rounded-xl p-6">
         <h3 className="font-medium text-foreground mb-3">What you will need</h3>
         <ul className="space-y-2 text-sm text-muted-foreground">
           <li className="flex items-start gap-2">

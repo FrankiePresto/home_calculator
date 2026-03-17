@@ -79,17 +79,17 @@ export function ResultsDashboard() {
       {/* Hero Insight */}
       <HeroInsight />
 
-      {/* Tabs */}
-      <div className="border-b border-border">
-        <nav className="flex gap-1" aria-label="Results tabs">
+      {/* Tabs - Prominent navigation for different analysis views */}
+      <div className="card p-2">
+        <nav className="flex gap-2" aria-label="Results tabs">
           {TABS.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+              className={`flex-1 px-4 py-3 text-sm font-medium rounded-lg transition-all ${
                 activeTab === tab.id
-                  ? 'border-accent text-accent'
-                  : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
+                  ? 'bg-accent text-accent-foreground shadow-sm'
+                  : 'bg-transparent text-muted-foreground hover:text-foreground hover:bg-secondary'
               }`}
               aria-current={activeTab === tab.id ? 'page' : undefined}
             >

@@ -11,10 +11,9 @@ import { InfoTooltip } from '@/components/shared/InfoTooltip';
 export function FinancialStep() {
   const profile = useStore((state) => state.financialProfile);
   const setProfile = useStore((state) => state.setFinancialProfile);
-  const rentScenario = useStore((state) => state.rentScenario);
   const [showAdvanced, setShowAdvanced] = useState(profile.includeTaxes || profile.useAdvancedSavings || false);
 
-  // Calculate preview
+  // Calculate preview - Note: Housing costs are entered on the Rent step, so we only show expenses here
   const isDualIncome = profile.incomeType === 'dual' && profile.secondaryIncome > 0;
   const totalGrossIncome = profile.annualGrossIncome + (isDualIncome ? profile.secondaryIncome : 0);
   const monthlyGrossIncome = totalGrossIncome / 12;
@@ -31,9 +30,9 @@ export function FinancialStep() {
     }
   }
 
-  const monthlyHousing = rentScenario.monthlyRent + rentScenario.rentersInsurance;
-  const discretionary = monthlyNetIncome - monthlyHousing - profile.monthlyNonHousingExpenses;
-  const monthlySavings = Math.max(0, discretionary * (profile.savingsRate / 100));
+  // Only show non-housing expenses here - housing is entered on the Rent step
+  const discretionaryBeforeHousing = monthlyNetIncome - profile.monthlyNonHousingExpenses;
+  const estimatedSavings = Math.max(0, discretionaryBeforeHousing * (profile.savingsRate / 100));
 
   return (
     <div className="space-y-8">
@@ -152,9 +151,9 @@ export function FinancialStep() {
       {/* Cash Flow Preview */}
       <section className="bg-accent/5 border border-accent/20 rounded-xl p-6">
         <h3 className="text-sm font-medium text-foreground mb-4">
-          Monthly Cash Flow Preview {profile.includeTaxes ? '(after tax)' : '(before tax)'}
+          Monthly Income Preview {profile.includeTaxes ? '(after tax)' : '(before tax)'}
         </h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           <div>
             <p className="text-xs text-muted-foreground mb-1">
               {profile.includeTaxes ? 'Net Income' : 'Gross Income'}
@@ -164,39 +163,44 @@ export function FinancialStep() {
             </p>
           </div>
           <div>
-            <p className="text-xs text-muted-foreground mb-1">Housing + Expenses</p>
+            <p className="text-xs text-muted-foreground mb-1">Non-Housing Expenses</p>
             <p className="text-lg font-semibold text-foreground tabular-nums">
-              -{formatCurrency(monthlyHousing + profile.monthlyNonHousingExpenses)}
+              -{formatCurrency(profile.monthlyNonHousingExpenses)}
             </p>
           </div>
           <div>
-            <p className="text-xs text-muted-foreground mb-1">Monthly Savings</p>
-            <p className="text-lg font-semibold text-success tabular-nums">
-              {formatCurrency(monthlySavings)}
-            </p>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground mb-1">Remaining</p>
-            <p className={`text-lg font-semibold tabular-nums ${discretionary - monthlySavings < 200 ? 'text-warning' : 'text-foreground'}`}>
-              {formatCurrency(discretionary - monthlySavings)}
+            <p className="text-xs text-muted-foreground mb-1">Available for Housing + Savings</p>
+            <p className={`text-lg font-semibold tabular-nums ${discretionaryBeforeHousing < 500 ? 'text-warning' : 'text-success'}`}>
+              {formatCurrency(discretionaryBeforeHousing)}
             </p>
           </div>
         </div>
-        {discretionary < 0 && (
-          <p className="mt-3 text-sm text-destructive">
+        <p className="mt-3 text-xs text-muted-foreground">
+          Housing costs will be entered in the next step.
+        </p>
+        {discretionaryBeforeHousing < 0 && (
+          <p className="mt-2 text-sm text-destructive">
             Your expenses exceed your income. Adjust your numbers above.
           </p>
         )}
       </section>
 
       {/* Advanced Settings Toggle */}
-      <div className="border-t border-border pt-6">
+      <section className="card p-4 border-2 border-dashed border-accent/30 bg-accent/5">
         <button
           onClick={() => setShowAdvanced(!showAdvanced)}
-          className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+          className="w-full flex items-center justify-between gap-3 text-left"
         >
-          <ChevronIcon className={`w-4 h-4 transition-transform ${showAdvanced ? 'rotate-90' : ''}`} />
-          Advanced Settings (Taxes, Savings Split)
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center">
+              <SettingsIcon className="w-4 h-4 text-accent" />
+            </div>
+            <div>
+              <span className="text-sm font-semibold text-foreground">Advanced Settings</span>
+              <p className="text-xs text-muted-foreground">Canadian taxes, HISA vs investment split</p>
+            </div>
+          </div>
+          <ChevronIcon className={`w-5 h-5 text-accent transition-transform ${showAdvanced ? 'rotate-90' : ''}`} />
         </button>
 
         {showAdvanced && (
@@ -289,8 +293,17 @@ export function FinancialStep() {
             </div>
           </div>
         )}
-      </div>
+      </section>
     </div>
+  );
+}
+
+function SettingsIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
   );
 }
 

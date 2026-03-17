@@ -31,11 +31,16 @@ export function WizardProvider({ children }: { children: ReactNode }) {
   const canGoNext = stepIndex < INPUT_STEPS.length - 1;
   const isLastInputStep = currentStep === 'review';
 
+  const scrollToTop = useCallback(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
   const setStep = useCallback((step: WizardStep) => {
     const newIndex = STEPS.indexOf(step);
     setCurrentStep(step);
     setMaxVisitedStep((prev) => Math.max(prev, newIndex));
-  }, []);
+    scrollToTop();
+  }, [scrollToTop]);
 
   const nextStep = useCallback(() => {
     const nextIndex = stepIndex + 1;
@@ -43,19 +48,22 @@ export function WizardProvider({ children }: { children: ReactNode }) {
       const next = STEPS[nextIndex];
       setCurrentStep(next);
       setMaxVisitedStep((prev) => Math.max(prev, nextIndex));
+      scrollToTop();
     }
-  }, [stepIndex]);
+  }, [stepIndex, scrollToTop]);
 
   const prevStep = useCallback(() => {
     if (stepIndex > 0) {
       setCurrentStep(STEPS[stepIndex - 1]);
+      scrollToTop();
     }
-  }, [stepIndex]);
+  }, [stepIndex, scrollToTop]);
 
   const goToResults = useCallback(() => {
     setCurrentStep('results');
     setMaxVisitedStep(STEPS.length - 1);
-  }, []);
+    scrollToTop();
+  }, [scrollToTop]);
 
   return (
     <WizardContext.Provider
