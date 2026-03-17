@@ -148,41 +148,63 @@ export function FinancialStep() {
         </div>
       </section>
 
-      {/* Cash Flow Preview */}
-      <section className="bg-accent/5 border border-accent/20 rounded-xl p-8">
-        <h3 className="text-base font-semibold text-foreground mb-6">
-          Monthly Income Preview {profile.includeTaxes ? '(after tax)' : '(before tax)'}
+      {/* Monthly Cash Flow */}
+      <section className="card p-6">
+        <h3 className="section-header mb-6">
+          Monthly Cash Flow {profile.includeTaxes ? '(after tax)' : '(before tax)'}
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="text-center p-4 bg-card rounded-lg border border-border">
-            <p className="text-sm text-muted-foreground mb-2">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between py-4 border-b border-border">
+            <span className="text-muted-foreground">
               {profile.includeTaxes ? 'Net Income' : 'Gross Income'}
-            </p>
-            <p className="text-2xl font-bold text-foreground tabular-nums">
+            </span>
+            <span className="text-2xl font-bold text-foreground tabular-nums">
               {formatCurrency(monthlyNetIncome)}
-            </p>
+            </span>
           </div>
-          <div className="text-center p-4 bg-card rounded-lg border border-border">
-            <p className="text-sm text-muted-foreground mb-2">Non-Housing Expenses</p>
-            <p className="text-2xl font-bold text-foreground tabular-nums">
+          <div className="flex items-center justify-between py-4 border-b border-border">
+            <span className="text-muted-foreground">Non-Housing Expenses</span>
+            <span className="text-2xl font-bold text-foreground tabular-nums">
               -{formatCurrency(profile.monthlyNonHousingExpenses)}
-            </p>
+            </span>
           </div>
-          <div className="text-center p-4 bg-card rounded-lg border border-border">
-            <p className="text-sm text-muted-foreground mb-2">Available for Housing + Savings</p>
-            <p className={`text-2xl font-bold tabular-nums ${discretionaryBeforeHousing < 500 ? 'text-warning' : 'text-success'}`}>
+          <div className="flex items-center justify-between py-4 bg-accent/10 -mx-6 px-6 rounded-b-xl">
+            <span className="font-medium text-foreground">Available for Housing + Savings</span>
+            <span className={`text-2xl font-bold tabular-nums ${discretionaryBeforeHousing < 500 ? 'text-warning' : 'text-success'}`}>
               {formatCurrency(discretionaryBeforeHousing)}
-            </p>
+            </span>
           </div>
         </div>
-        <p className="mt-6 text-sm text-muted-foreground text-center">
+        <p className="mt-4 text-sm text-muted-foreground">
           Housing costs will be entered in the next step.
         </p>
         {discretionaryBeforeHousing < 0 && (
-          <p className="mt-3 text-sm text-destructive text-center">
+          <p className="mt-2 text-sm text-destructive">
             Your expenses exceed your income. Adjust your numbers above.
           </p>
         )}
+      </section>
+
+      {/* Estimated Savings */}
+      <section className="card p-6">
+        <h3 className="section-header mb-6">Estimated Monthly Savings</h3>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between py-4 border-b border-border">
+            <span className="text-muted-foreground">Savings Rate</span>
+            <span className="text-xl font-semibold text-foreground tabular-nums">
+              {profile.savingsRate}%
+            </span>
+          </div>
+          <div className="flex items-center justify-between py-4 bg-success/10 -mx-6 px-6 rounded-b-xl">
+            <span className="font-medium text-foreground">Monthly Savings (before housing)</span>
+            <span className="text-2xl font-bold text-success tabular-nums">
+              {formatCurrency(estimatedSavings)}
+            </span>
+          </div>
+        </div>
+        <p className="mt-4 text-sm text-muted-foreground">
+          Actual savings will depend on your housing choice in the next steps.
+        </p>
       </section>
 
       {/* Advanced Settings Toggle */}
