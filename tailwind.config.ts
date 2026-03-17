@@ -1,5 +1,6 @@
 import type { Config } from 'tailwindcss'
 
+// Home Calculator Design System
 const config: Config = {
   content: [
     './pages/**/*.{js,ts,jsx,tsx,mdx}',
