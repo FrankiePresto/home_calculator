@@ -54,7 +54,7 @@ export function FinancialStep() {
               step={5000}
               helpText="Pre-tax annual income"
             />
-            <label className="inline-flex items-center mt-3 text-sm text-muted-foreground cursor-pointer">
+            <label className="checkbox-card mt-4 max-w-md">
               <input
                 type="checkbox"
                 checked={profile.incomeType === 'dual'}
@@ -62,9 +62,12 @@ export function FinancialStep() {
                   incomeType: e.target.checked ? 'dual' : 'single',
                   secondaryIncome: e.target.checked ? profile.secondaryIncome || 75000 : 0,
                 })}
-                className="h-4 w-4 text-accent rounded border-border focus:ring-accent mr-2"
+                className="checkbox mt-0.5"
               />
-              Dual income household
+              <div>
+                <span className="text-sm font-medium text-foreground">Dual income household</span>
+                <p className="text-xs text-muted-foreground mt-0.5">Add a second earner's income</p>
+              </div>
             </label>
           </div>
 
@@ -229,34 +232,34 @@ export function FinancialStep() {
           <div className="mt-6 space-y-6">
             {/* Tax Settings */}
             <div className="card p-6">
-              <div className="flex items-start gap-3 mb-4">
+              <label className="checkbox-card cursor-pointer">
                 <input
                   id="include-taxes"
                   type="checkbox"
                   checked={profile.includeTaxes || false}
                   onChange={(e) => setProfile({ includeTaxes: e.target.checked })}
-                  className="mt-1 h-4 w-4 text-accent rounded border-border focus:ring-accent"
+                  className="checkbox mt-0.5"
                 />
                 <div>
-                  <label htmlFor="include-taxes" className="text-sm font-medium text-foreground cursor-pointer">
+                  <span className="text-sm font-medium text-foreground">
                     Include Canadian Income Taxes
-                  </label>
+                  </span>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     Uses 2026 federal and provincial tax brackets
                   </p>
                 </div>
-              </div>
+              </label>
 
               {profile.includeTaxes && (
-                <div className="mt-4 pl-7">
-                  <label htmlFor="province" className="block text-sm font-medium text-stone-700 mb-1">
+                <div className="mt-4 pt-4 border-t border-border">
+                  <label htmlFor="province" className="label mb-2 block">
                     Province
                   </label>
                   <select
                     id="province"
                     value={profile.province || 'ON'}
                     onChange={(e) => setProfile({ province: e.target.value })}
-                    className="block w-full max-w-xs rounded-lg border-border py-2 px-3 text-foreground ring-1 ring-inset ring-border focus:ring-2 focus:ring-accent text-sm"
+                    className="input max-w-xs"
                   >
                     {SUPPORTED_PROVINCES.map((prov) => (
                       <option key={prov.value} value={prov.value}>
@@ -270,26 +273,26 @@ export function FinancialStep() {
 
             {/* Advanced Savings Split */}
             <div className="card p-6">
-              <div className="flex items-start gap-3 mb-4">
+              <label className="checkbox-card cursor-pointer">
                 <input
                   id="use-advanced-savings"
                   type="checkbox"
                   checked={profile.useAdvancedSavings || false}
                   onChange={(e) => setProfile({ useAdvancedSavings: e.target.checked })}
-                  className="mt-1 h-4 w-4 text-accent rounded border-border focus:ring-accent"
+                  className="checkbox mt-0.5"
                 />
                 <div>
-                  <label htmlFor="use-advanced-savings" className="text-sm font-medium text-foreground cursor-pointer">
+                  <span className="text-sm font-medium text-foreground">
                     Split Savings Between Investments and HISA
-                  </label>
+                  </span>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     By default, all savings are invested at your expected return rate
                   </p>
                 </div>
-              </div>
+              </label>
 
               {profile.useAdvancedSavings && (
-                <div className="mt-4 pl-7 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="mt-4 pt-4 border-t border-border grid grid-cols-1 md:grid-cols-2 gap-4">
                   <SliderInput
                     id="non-invested-rate"
                     label="Keep in HISA/Cash"
