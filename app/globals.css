@@ -4,77 +4,52 @@
 
 @layer base {
   :root {
-    /* Primary - Warm Stone for trust and sophistication */
     --primary: 24 10% 10%;
     --primary-foreground: 60 9% 98%;
-    
-    /* Secondary - Warm neutral for backgrounds */
     --secondary: 60 5% 96%;
     --secondary-foreground: 24 10% 10%;
-    
-    /* Accent - Warm amber for CTAs and highlights */
     --accent: 38 92% 44%;
     --accent-foreground: 0 0% 100%;
-    
-    /* Muted backgrounds */
     --muted: 60 5% 96%;
     --muted-foreground: 25 6% 32%;
-    
-    /* Background colors */
     --background: 60 9% 98%;
     --foreground: 24 10% 10%;
-    
-    /* Card backgrounds */
     --card: 0 0% 100%;
     --card-foreground: 24 10% 10%;
-    
-    /* Border color */
     --border: 24 6% 83%;
     --input: 24 6% 83%;
     --ring: 38 92% 44%;
-    
-    /* Semantic colors */
     --success: 160 84% 30%;
     --success-foreground: 0 0% 100%;
-    
     --info: 199 89% 39%;
     --info-foreground: 0 0% 100%;
-    
     --warning: 43 96% 50%;
     --warning-foreground: 24 10% 10%;
-    
     --destructive: 347 77% 50%;
     --destructive-foreground: 0 0% 100%;
-    
-    /* Radius */
     --radius: 0.75rem;
   }
-}
 
-@layer base {
   * {
     border-color: hsl(var(--border));
   }
-  
+
   body {
-    @apply antialiased;
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
     font-feature-settings: "rlig" 1, "calt" 1;
   }
-  
-  /* Tabular numbers for financial data */
+
   .tabular-nums {
     font-variant-numeric: tabular-nums;
   }
-  
-  /* Hide number input spinners for cleaner design */
+
   input[type="number"]::-webkit-inner-spin-button,
   input[type="number"]::-webkit-outer-spin-button {
     -webkit-appearance: none;
     margin: 0;
   }
-  
+
   input[type="number"] {
     -moz-appearance: textfield;
     appearance: textfield;
@@ -82,116 +57,138 @@
 }
 
 @layer components {
-  /* Card component */
   .card {
-    @apply rounded-xl border shadow-sm;
     background-color: hsl(var(--card));
     color: hsl(var(--card-foreground));
     border-color: hsl(var(--border));
+    border-radius: var(--radius);
+    border-width: 1px;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   }
-  
-  /* Input styling */
+
   .input {
-    @apply flex h-10 w-full rounded-lg border px-3 py-2 text-sm 
-           file:border-0 file:bg-transparent file:text-sm file:font-medium
-           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2
-           disabled:cursor-not-allowed disabled:opacity-50;
+    display: flex;
+    height: 2.5rem;
+    width: 100%;
+    border-radius: 0.5rem;
+    border-width: 1px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
     background-color: hsl(var(--background));
     border-color: hsl(var(--input));
-    --tw-ring-color: hsl(var(--ring));
-    --tw-ring-offset-color: hsl(var(--background));
   }
-  
-  .input::placeholder {
-    color: hsl(var(--muted-foreground));
+
+  .input:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px hsl(var(--ring));
   }
-  
-  /* Button base styles */
+
+  .input:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
   .btn {
-    @apply inline-flex items-center justify-center rounded-lg text-sm font-medium 
-           transition-colors
-           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2
-           disabled:pointer-events-none disabled:opacity-50;
-    --tw-ring-color: hsl(var(--ring));
-    --tw-ring-offset-color: hsl(var(--background));
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: background-color 0.15s, color 0.15s;
   }
-  
+
+  .btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px hsl(var(--ring));
+  }
+
+  .btn:disabled {
+    pointer-events: none;
+    opacity: 0.5;
+  }
+
   .btn-primary {
-    @apply btn px-6 py-3;
+    padding: 0.75rem 1.5rem;
     background-color: hsl(var(--accent));
     color: hsl(var(--accent-foreground));
   }
-  
+
   .btn-primary:hover {
     background-color: hsl(32 81% 29%);
   }
-  
+
   .btn-secondary {
-    @apply btn px-6 py-3;
+    padding: 0.75rem 1.5rem;
     background-color: hsl(var(--secondary));
     color: hsl(var(--secondary-foreground));
   }
-  
+
   .btn-secondary:hover {
     background-color: hsl(60 6% 90%);
   }
-  
+
   .btn-outline {
-    @apply btn border px-6 py-3;
+    padding: 0.75rem 1.5rem;
     background-color: hsl(var(--background));
+    border-width: 1px;
     border-color: hsl(var(--border));
   }
-  
+
   .btn-outline:hover {
     background-color: hsl(var(--secondary));
   }
-  
+
   .btn-ghost {
-    @apply btn px-4 py-2;
+    padding: 0.5rem 1rem;
   }
-  
+
   .btn-ghost:hover {
     background-color: hsl(var(--secondary));
     color: hsl(var(--secondary-foreground));
   }
-  
-  /* Section header */
+
   .section-header {
-    @apply text-lg font-semibold tracking-tight;
+    font-size: 1.125rem;
+    font-weight: 600;
+    letter-spacing: -0.025em;
     color: hsl(var(--foreground));
   }
-  
-  /* Helper text */
+
   .helper-text {
-    @apply text-sm;
+    font-size: 0.875rem;
     color: hsl(var(--muted-foreground));
   }
-  
-  /* Label */
+
   .label {
-    @apply text-sm font-medium;
+    font-size: 0.875rem;
+    font-weight: 500;
     color: hsl(25 6% 45%);
   }
-  
-  /* Custom checkbox styling - subtle and balanced */
+
   .checkbox {
-    @apply h-4 w-4 rounded border cursor-pointer transition-all duration-150 flex-shrink-0;
+    height: 1rem;
+    width: 1rem;
+    border-radius: 0.25rem;
+    border-width: 1px;
+    cursor: pointer;
+    transition: all 0.15s;
+    flex-shrink: 0;
     border-color: hsl(var(--border));
     background-color: hsl(var(--background));
     -webkit-appearance: none;
     appearance: none;
   }
-  
+
   .checkbox:hover {
     border-color: hsl(var(--accent));
   }
-  
+
   .checkbox:focus {
-    @apply outline-none ring-2 ring-offset-1;
-    --tw-ring-color: hsl(var(--ring));
-    --tw-ring-offset-color: hsl(var(--background));
+    outline: none;
+    box-shadow: 0 0 0 2px hsl(var(--ring));
   }
-  
+
   .checkbox:checked {
     background-color: hsl(var(--accent));
     border-color: hsl(var(--accent));
@@ -200,35 +197,31 @@
     background-position: center;
     background-repeat: no-repeat;
   }
-  
-  /* Inline checkbox label - subtle, same visual weight as other form elements */
+
   .checkbox-label {
-    @apply inline-flex items-center gap-2 cursor-pointer text-sm;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-size: 0.875rem;
     color: hsl(var(--muted-foreground));
   }
-  
+
   .checkbox-label:hover {
-    color: hsl(var(--foreground));
-  }
-  
-  .checkbox-label:has(input:checked) {
     color: hsl(var(--foreground));
   }
 }
 
 @layer utilities {
-  /* Smooth transitions */
   .transition-base {
-    @apply transition-all duration-200 ease-in-out;
+    transition: all 0.2s ease-in-out;
   }
-  
-  /* Focus ring */
-  .focus-ring {
-    @apply focus:outline-none focus:ring-2 focus:ring-offset-2;
-    --tw-ring-color: hsl(var(--ring));
+
+  .focus-ring:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px hsl(var(--ring));
   }
-  
-  /* Glass effect for overlays */
+
   .glass {
     background-color: hsl(0 0% 100% / 0.8);
     backdrop-filter: blur(4px);
