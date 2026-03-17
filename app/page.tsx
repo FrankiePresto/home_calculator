@@ -1,5 +1,6 @@
 'use client';
 
+// Home Calculator - Rent vs Buy Wizard
 import { WizardLayout, useWizard } from '@/components/wizard';
 import { WelcomeStep, FinancialStep, RentStep, BuyStep, ReviewStep } from '@/components/steps';
 import { ResultsDashboard } from '@/components/results';
