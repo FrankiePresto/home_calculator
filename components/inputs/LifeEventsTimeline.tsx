@@ -3,8 +3,6 @@
 import { useState } from 'react';
 import { useStore } from '@/lib/store';
 import { LifeEvent, LifeEventType } from '@/lib/engine/types';
-import { CurrencyInput, PercentInput, SelectInput } from '@/components/shared';
-import { formatCurrency } from '@/lib/utils/formatters';
 
 // Generate unique ID
 const generateId = () => Math.random().toString(36).substr(2, 9);
@@ -22,6 +20,10 @@ const PRESETS: Partial<LifeEvent>[] = [
   { description: 'Part-time Period', type: 'income-change', incomeChangeDuration: 'phase', incomeMultiplier: 0.6 },
 ];
 
+// Shared input class
+const inputClass = "w-full rounded-lg border-0 py-2 px-3 text-sm text-foreground ring-1 ring-inset ring-border focus:ring-2 focus:ring-inset focus:ring-accent";
+const labelClass = "block text-xs font-medium text-muted-foreground mb-1.5";
+
 interface LifeEventRowProps {
   event: LifeEvent;
   onUpdate: (updates: Partial<LifeEvent>) => void;
@@ -37,140 +39,219 @@ function LifeEventRow({ event, onUpdate, onRemove, maxYear, isDualIncome }: Life
   }));
 
   return (
-    <div className="flex flex-wrap items-start gap-3 p-4 bg-secondary rounded-lg">
-      {/* Description */}
-      <div className="flex-1 min-w-[150px]">
-        <label className="block text-xs font-medium text-muted-foreground mb-1">Description</label>
-        <input
-          type="text"
-          value={event.description}
-          onChange={(e) => onUpdate({ description: e.target.value })}
-          className="block w-full rounded-lg border-0 py-1.5 px-2 text-foreground ring-1 ring-inset ring-border placeholder:text-muted-foreground focus:ring-2 focus:ring-inset focus:ring-accent text-sm"
-          placeholder="Event description"
-        />
-      </div>
+    <div className="relative p-4 bg-secondary rounded-lg">
+      {/* Delete button - always top right */}
+      <button
+        onClick={onRemove}
+        className="absolute top-3 right-3 p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded transition-colors"
+        title="Remove event"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+      </button>
 
-      {/* Type */}
-      <div className="w-32">
-        <label className="block text-xs font-medium text-muted-foreground mb-1">Type</label>
-        <select
-          value={event.type}
-          onChange={(e) => onUpdate({ type: e.target.value as LifeEventType })}
-          className="block w-full rounded-lg border-0 py-1.5 px-2 text-foreground ring-1 ring-inset ring-border focus:ring-2 focus:ring-inset focus:ring-accent text-sm"
-        >
-          <option value="one-time">One-time</option>
-          <option value="ongoing">Ongoing</option>
-          <option value="phase">Phase</option>
-          <option value="income-change">Income Change</option>
-        </select>
-      </div>
-
-      {/* Type-specific fields */}
+      {/* One-time event */}
       {event.type === 'one-time' && (
-        <>
-          <div className="w-28">
-            <label className="block text-xs font-medium text-muted-foreground mb-1">Year</label>
+        <div className="grid grid-cols-[1fr_120px_100px_100px] gap-3 pr-10">
+          <div>
+            <label className={labelClass}>Description</label>
+            <input
+              type="text"
+              value={event.description}
+              onChange={(e) => onUpdate({ description: e.target.value })}
+              className={inputClass}
+              placeholder="Event description"
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Type</label>
+            <select
+              value={event.type}
+              onChange={(e) => onUpdate({ type: e.target.value as LifeEventType })}
+              className={inputClass}
+            >
+              <option value="one-time">One-time</option>
+              <option value="ongoing">Ongoing</option>
+              <option value="phase">Phase</option>
+              <option value="income-change">Income Change</option>
+            </select>
+          </div>
+          <div>
+            <label className={labelClass}>Year</label>
             <select
               value={event.year || 1}
               onChange={(e) => onUpdate({ year: parseInt(e.target.value) })}
-              className="block w-full rounded-lg border-0 py-1.5 px-2 text-foreground ring-1 ring-inset ring-border focus:ring-2 focus:ring-inset focus:ring-accent text-sm"
+              className={inputClass}
             >
               {yearOptions.map((opt) => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
               ))}
             </select>
           </div>
-          <div className="w-32">
-            <label className="block text-xs font-medium text-muted-foreground mb-1">Amount</label>
+          <div>
+            <label className={labelClass}>Amount</label>
             <div className="relative">
-              <span className="absolute left-2 top-1.5 text-muted-foreground text-sm">$</span>
+              <span className="absolute left-3 top-2 text-muted-foreground text-sm">$</span>
               <input
                 type="number"
                 value={Math.abs(event.amount || 0)}
                 onChange={(e) => onUpdate({ amount: -Math.abs(parseFloat(e.target.value) || 0) })}
-                className="block w-full rounded-md border-0 py-1.5 pl-5 pr-2 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-blue-500 text-sm"
+                className={`${inputClass} pl-7`}
               />
             </div>
           </div>
-        </>
+        </div>
       )}
 
+      {/* Ongoing event */}
       {event.type === 'ongoing' && (
-        <>
-          <div className="w-28">
-            <label className="block text-xs font-medium text-muted-foreground mb-1">Start Year</label>
+        <div className="grid grid-cols-[1fr_120px_100px_110px] gap-3 pr-10">
+          <div>
+            <label className={labelClass}>Description</label>
+            <input
+              type="text"
+              value={event.description}
+              onChange={(e) => onUpdate({ description: e.target.value })}
+              className={inputClass}
+              placeholder="Event description"
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Type</label>
+            <select
+              value={event.type}
+              onChange={(e) => onUpdate({ type: e.target.value as LifeEventType })}
+              className={inputClass}
+            >
+              <option value="one-time">One-time</option>
+              <option value="ongoing">Ongoing</option>
+              <option value="phase">Phase</option>
+              <option value="income-change">Income Change</option>
+            </select>
+          </div>
+          <div>
+            <label className={labelClass}>Start Year</label>
             <select
               value={event.startYear || 1}
               onChange={(e) => onUpdate({ startYear: parseInt(e.target.value) })}
-              className="block w-full rounded-lg border-0 py-1.5 px-2 text-foreground ring-1 ring-inset ring-border focus:ring-2 focus:ring-inset focus:ring-accent text-sm"
+              className={inputClass}
             >
               {yearOptions.map((opt) => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
               ))}
             </select>
           </div>
-          <div className="w-32">
-            <label className="block text-xs font-medium text-muted-foreground mb-1">Monthly Cost</label>
+          <div>
+            <label className={labelClass}>Monthly</label>
             <div className="relative">
-              <span className="absolute left-2 top-1.5 text-muted-foreground text-sm">$</span>
+              <span className="absolute left-3 top-2 text-muted-foreground text-sm">$</span>
               <input
                 type="number"
                 value={Math.abs(event.monthlyAmount || 0)}
                 onChange={(e) => onUpdate({ monthlyAmount: -Math.abs(parseFloat(e.target.value) || 0) })}
-                className="block w-full rounded-md border-0 py-1.5 pl-5 pr-2 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-blue-500 text-sm"
+                className={`${inputClass} pl-7`}
               />
             </div>
           </div>
-        </>
+        </div>
       )}
 
+      {/* Phase event */}
       {event.type === 'phase' && (
-        <>
-          <div className="w-28">
-            <label className="block text-xs font-medium text-muted-foreground mb-1">Start Year</label>
+        <div className="grid grid-cols-[1fr_110px_90px_90px_100px] gap-3 pr-10">
+          <div>
+            <label className={labelClass}>Description</label>
+            <input
+              type="text"
+              value={event.description}
+              onChange={(e) => onUpdate({ description: e.target.value })}
+              className={inputClass}
+              placeholder="Event description"
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Type</label>
+            <select
+              value={event.type}
+              onChange={(e) => onUpdate({ type: e.target.value as LifeEventType })}
+              className={inputClass}
+            >
+              <option value="one-time">One-time</option>
+              <option value="ongoing">Ongoing</option>
+              <option value="phase">Phase</option>
+              <option value="income-change">Income Change</option>
+            </select>
+          </div>
+          <div>
+            <label className={labelClass}>Start</label>
             <select
               value={event.startYear || 1}
               onChange={(e) => onUpdate({ startYear: parseInt(e.target.value) })}
-              className="block w-full rounded-lg border-0 py-1.5 px-2 text-foreground ring-1 ring-inset ring-border focus:ring-2 focus:ring-inset focus:ring-accent text-sm"
+              className={inputClass}
             >
               {yearOptions.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
+                <option key={opt.value} value={opt.value}>Yr {opt.value}</option>
               ))}
             </select>
           </div>
-          <div className="w-28">
-            <label className="block text-xs font-medium text-muted-foreground mb-1">End Year</label>
+          <div>
+            <label className={labelClass}>End</label>
             <select
               value={event.endYear || (event.startYear || 1) + 5}
               onChange={(e) => onUpdate({ endYear: parseInt(e.target.value) })}
-              className="block w-full rounded-lg border-0 py-1.5 px-2 text-foreground ring-1 ring-inset ring-border focus:ring-2 focus:ring-inset focus:ring-accent text-sm"
+              className={inputClass}
             >
               {yearOptions
                 .filter((opt) => opt.value > (event.startYear || 1))
                 .map((opt) => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  <option key={opt.value} value={opt.value}>Yr {opt.value}</option>
                 ))}
             </select>
           </div>
-          <div className="w-32">
-            <label className="block text-xs font-medium text-muted-foreground mb-1">Monthly Cost</label>
+          <div>
+            <label className={labelClass}>Monthly</label>
             <div className="relative">
-              <span className="absolute left-2 top-1.5 text-muted-foreground text-sm">$</span>
+              <span className="absolute left-3 top-2 text-muted-foreground text-sm">$</span>
               <input
                 type="number"
                 value={Math.abs(event.monthlyAmount || 0)}
                 onChange={(e) => onUpdate({ monthlyAmount: -Math.abs(parseFloat(e.target.value) || 0) })}
-                className="block w-full rounded-md border-0 py-1.5 pl-5 pr-2 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-blue-500 text-sm"
+                className={`${inputClass} pl-7`}
               />
             </div>
           </div>
-        </>
+        </div>
       )}
 
-      {event.type === 'income-change' && (
-        <>
-          <div className="w-32">
-            <label className="block text-xs font-medium text-muted-foreground mb-1">Duration</label>
+      {/* Income Change - Ongoing */}
+      {event.type === 'income-change' && (!event.incomeChangeDuration || event.incomeChangeDuration === 'ongoing') && (
+        <div className={`grid ${isDualIncome ? 'grid-cols-[1fr_120px_100px_80px_90px_80px]' : 'grid-cols-[1fr_120px_110px_90px_80px]'} gap-3 pr-10`}>
+          <div>
+            <label className={labelClass}>Description</label>
+            <input
+              type="text"
+              value={event.description}
+              onChange={(e) => onUpdate({ description: e.target.value })}
+              className={inputClass}
+              placeholder="Event description"
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Type</label>
+            <select
+              value={event.type}
+              onChange={(e) => onUpdate({ type: e.target.value as LifeEventType })}
+              className={inputClass}
+            >
+              <option value="one-time">One-time</option>
+              <option value="ongoing">Ongoing</option>
+              <option value="phase">Phase</option>
+              <option value="income-change">Income Change</option>
+            </select>
+          </div>
+          <div>
+            <label className={labelClass}>Duration</label>
             <select
               value={event.incomeChangeDuration || 'ongoing'}
               onChange={(e) => {
@@ -183,7 +264,6 @@ function LifeEventRow({ event, onUpdate, onRemove, maxYear, isDualIncome }: Life
                     incomeMultiplier: event.incomeMultiplier || 0.5,
                     year: undefined,
                     percentChange: undefined,
-                    newAnnualIncome: undefined,
                   });
                 } else {
                   onUpdate({
@@ -196,118 +276,165 @@ function LifeEventRow({ event, onUpdate, onRemove, maxYear, isDualIncome }: Life
                   });
                 }
               }}
-              className="block w-full rounded-lg border-0 py-1.5 px-2 text-foreground ring-1 ring-inset ring-border focus:ring-2 focus:ring-inset focus:ring-accent text-sm"
+              className={inputClass}
             >
-              <option value="ongoing">Ongoing</option>
+              <option value="ongoing">Permanent</option>
               <option value="phase">Temporary</option>
             </select>
           </div>
-
-          {/* Earner selector (only for dual income households) */}
           {isDualIncome && (
-            <div className="w-28">
-              <label className="block text-xs font-medium text-muted-foreground mb-1">Earner</label>
+            <div>
+              <label className={labelClass}>Earner</label>
               <select
                 value={event.affectedEarner || 'primary'}
                 onChange={(e) => onUpdate({ affectedEarner: e.target.value as 'primary' | 'secondary' })}
-                className="block w-full rounded-lg border-0 py-1.5 px-2 text-foreground ring-1 ring-inset ring-border focus:ring-2 focus:ring-inset focus:ring-accent text-sm"
+                className={inputClass}
               >
-                <option value="primary">Primary</option>
-                <option value="secondary">Secondary</option>
+                <option value="primary">1st</option>
+                <option value="secondary">2nd</option>
               </select>
             </div>
           )}
-
-          {/* Ongoing income change fields */}
-          {(!event.incomeChangeDuration || event.incomeChangeDuration === 'ongoing') && (
-            <>
-              <div className="w-28">
-                <label className="block text-xs font-medium text-muted-foreground mb-1">Year</label>
-                <select
-                  value={event.year || 1}
-                  onChange={(e) => onUpdate({ year: parseInt(e.target.value) })}
-                  className="block w-full rounded-lg border-0 py-1.5 px-2 text-foreground ring-1 ring-inset ring-border focus:ring-2 focus:ring-inset focus:ring-accent text-sm"
-                >
-                  {yearOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="w-32">
-                <label className="block text-xs font-medium text-muted-foreground mb-1">Change %</label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    value={event.percentChange || 0}
-                    onChange={(e) => onUpdate({ percentChange: parseFloat(e.target.value) || 0 })}
-                    className="block w-full rounded-md border-0 py-1.5 pl-2 pr-6 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-blue-500 text-sm"
-                  />
-                  <span className="absolute right-2 top-1.5 text-muted-foreground text-sm">%</span>
-                </div>
-              </div>
-            </>
-          )}
-
-          {/* Phase-based income change fields */}
-          {event.incomeChangeDuration === 'phase' && (
-            <>
-              <div className="w-28">
-                <label className="block text-xs font-medium text-muted-foreground mb-1">Start Year</label>
-                <select
-                  value={event.startYear || 1}
-                  onChange={(e) => onUpdate({ startYear: parseInt(e.target.value) })}
-                  className="block w-full rounded-lg border-0 py-1.5 px-2 text-foreground ring-1 ring-inset ring-border focus:ring-2 focus:ring-inset focus:ring-accent text-sm"
-                >
-                  {yearOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="w-28">
-                <label className="block text-xs font-medium text-muted-foreground mb-1">End Year</label>
-                <select
-                  value={event.endYear || (event.startYear || 1) + 1}
-                  onChange={(e) => onUpdate({ endYear: parseInt(e.target.value) })}
-                  className="block w-full rounded-lg border-0 py-1.5 px-2 text-foreground ring-1 ring-inset ring-border focus:ring-2 focus:ring-inset focus:ring-accent text-sm"
-                >
-                  {yearOptions
-                    .filter((opt) => opt.value >= (event.startYear || 1))
-                    .map((opt) => (
-                      <option key={opt.value} value={opt.value}>{opt.label}</option>
-                    ))}
-                </select>
-              </div>
-              <div className="w-32">
-                <label className="block text-xs font-medium text-muted-foreground mb-1">Income %</label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    value={Math.round((event.incomeMultiplier || 0.5) * 100)}
-                    onChange={(e) => onUpdate({ incomeMultiplier: (parseFloat(e.target.value) || 50) / 100 })}
-                    min={0}
-                    max={100}
-                    className="block w-full rounded-md border-0 py-1.5 pl-2 pr-6 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-blue-500 text-sm"
-                  />
-                  <span className="absolute right-2 top-1.5 text-muted-foreground text-sm">%</span>
-                </div>
-              </div>
-            </>
-          )}
-        </>
+          <div>
+            <label className={labelClass}>Year</label>
+            <select
+              value={event.year || 1}
+              onChange={(e) => onUpdate({ year: parseInt(e.target.value) })}
+              className={inputClass}
+            >
+              {yearOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>Yr {opt.value}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className={labelClass}>Change</label>
+            <div className="relative">
+              <input
+                type="number"
+                value={event.percentChange || 0}
+                onChange={(e) => onUpdate({ percentChange: parseFloat(e.target.value) || 0 })}
+                className={`${inputClass} pr-7`}
+              />
+              <span className="absolute right-3 top-2 text-muted-foreground text-sm">%</span>
+            </div>
+          </div>
+        </div>
       )}
 
-      {/* Remove button */}
-      <div className="flex items-end">
-        <button
-          onClick={onRemove}
-          className="p-1.5 text-destructive hover:text-destructive/80 hover:bg-destructive/10 rounded"
-          title="Remove event"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-          </svg>
-        </button>
-      </div>
+      {/* Income Change - Phase/Temporary */}
+      {event.type === 'income-change' && event.incomeChangeDuration === 'phase' && (
+        <div className={`grid ${isDualIncome ? 'grid-cols-[1fr_110px_100px_70px_70px_70px_70px]' : 'grid-cols-[1fr_110px_100px_80px_80px_80px]'} gap-3 pr-10`}>
+          <div>
+            <label className={labelClass}>Description</label>
+            <input
+              type="text"
+              value={event.description}
+              onChange={(e) => onUpdate({ description: e.target.value })}
+              className={inputClass}
+              placeholder="Event description"
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Type</label>
+            <select
+              value={event.type}
+              onChange={(e) => onUpdate({ type: e.target.value as LifeEventType })}
+              className={inputClass}
+            >
+              <option value="one-time">One-time</option>
+              <option value="ongoing">Ongoing</option>
+              <option value="phase">Phase</option>
+              <option value="income-change">Income Change</option>
+            </select>
+          </div>
+          <div>
+            <label className={labelClass}>Duration</label>
+            <select
+              value={event.incomeChangeDuration || 'ongoing'}
+              onChange={(e) => {
+                const duration = e.target.value as 'ongoing' | 'phase';
+                if (duration === 'phase') {
+                  onUpdate({
+                    incomeChangeDuration: duration,
+                    startYear: event.startYear || 1,
+                    endYear: event.endYear || 2,
+                    incomeMultiplier: event.incomeMultiplier || 0.5,
+                    year: undefined,
+                    percentChange: undefined,
+                  });
+                } else {
+                  onUpdate({
+                    incomeChangeDuration: duration,
+                    year: event.year || 1,
+                    percentChange: event.percentChange || 0,
+                    startYear: undefined,
+                    endYear: undefined,
+                    incomeMultiplier: undefined,
+                  });
+                }
+              }}
+              className={inputClass}
+            >
+              <option value="ongoing">Permanent</option>
+              <option value="phase">Temporary</option>
+            </select>
+          </div>
+          {isDualIncome && (
+            <div>
+              <label className={labelClass}>Earner</label>
+              <select
+                value={event.affectedEarner || 'primary'}
+                onChange={(e) => onUpdate({ affectedEarner: e.target.value as 'primary' | 'secondary' })}
+                className={inputClass}
+              >
+                <option value="primary">1st</option>
+                <option value="secondary">2nd</option>
+              </select>
+            </div>
+          )}
+          <div>
+            <label className={labelClass}>Start</label>
+            <select
+              value={event.startYear || 1}
+              onChange={(e) => onUpdate({ startYear: parseInt(e.target.value) })}
+              className={inputClass}
+            >
+              {yearOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>Yr {opt.value}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className={labelClass}>End</label>
+            <select
+              value={event.endYear || (event.startYear || 1) + 1}
+              onChange={(e) => onUpdate({ endYear: parseInt(e.target.value) })}
+              className={inputClass}
+            >
+              {yearOptions
+                .filter((opt) => opt.value >= (event.startYear || 1))
+                .map((opt) => (
+                  <option key={opt.value} value={opt.value}>Yr {opt.value}</option>
+                ))}
+            </select>
+          </div>
+          <div>
+            <label className={labelClass}>Income</label>
+            <div className="relative">
+              <input
+                type="number"
+                value={Math.round((event.incomeMultiplier || 0.5) * 100)}
+                onChange={(e) => onUpdate({ incomeMultiplier: (parseFloat(e.target.value) || 50) / 100 })}
+                min={0}
+                max={100}
+                className={`${inputClass} pr-7`}
+              />
+              <span className="absolute right-3 top-2 text-muted-foreground text-sm">%</span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
