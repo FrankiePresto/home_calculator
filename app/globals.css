@@ -2,8 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Home Calculator Design System */
-
 @layer base {
   :root {
     /* Primary - Warm Stone for trust and sophistication */
