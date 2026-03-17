@@ -175,9 +175,9 @@
     color: hsl(25 6% 45%);
   }
   
-  /* Custom checkbox styling */
+  /* Custom checkbox styling - subtle and balanced */
   .checkbox {
-    @apply h-5 w-5 rounded-md border-2 cursor-pointer transition-all duration-150;
+    @apply h-4 w-4 rounded border cursor-pointer transition-all duration-150 flex-shrink-0;
     border-color: hsl(var(--border));
     background-color: hsl(var(--background));
     -webkit-appearance: none;
@@ -189,7 +189,7 @@
   }
   
   .checkbox:focus {
-    @apply outline-none ring-2 ring-offset-2;
+    @apply outline-none ring-2 ring-offset-1;
     --tw-ring-color: hsl(var(--ring));
     --tw-ring-offset-color: hsl(var(--background));
   }
@@ -203,21 +203,18 @@
     background-repeat: no-repeat;
   }
   
-  /* Checkbox toggle card - for important options */
-  .checkbox-card {
-    @apply flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all duration-200;
-    border-color: hsl(var(--border));
-    background-color: hsl(var(--card));
+  /* Inline checkbox label - subtle, same visual weight as other form elements */
+  .checkbox-label {
+    @apply inline-flex items-center gap-2 cursor-pointer text-sm;
+    color: hsl(var(--muted-foreground));
   }
   
-  .checkbox-card:hover {
-    border-color: hsl(var(--accent) / 0.5);
-    background-color: hsl(var(--accent) / 0.02);
+  .checkbox-label:hover {
+    color: hsl(var(--foreground));
   }
   
-  .checkbox-card:has(input:checked) {
-    border-color: hsl(var(--accent));
-    background-color: hsl(var(--accent) / 0.05);
+  .checkbox-label:has(input:checked) {
+    color: hsl(var(--foreground));
   }
 }
 
