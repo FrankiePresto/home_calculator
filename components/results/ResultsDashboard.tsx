@@ -111,10 +111,8 @@ export function ResultsDashboard() {
 
         {activeTab === 'details' && (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-              <CashFlowSankey />
-              <SunkCostComparison />
-            </div>
+            <CashFlowSankey />
+            <SunkCostComparison />
           </div>
         )}
 
