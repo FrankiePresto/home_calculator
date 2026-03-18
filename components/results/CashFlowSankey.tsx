@@ -51,6 +51,7 @@ export function CashFlowSankey() {
 
   if (cashFlowData.sunkCosts.utilities > 0) sunkItems.push({ label: 'Utilities', value: cashFlowData.sunkCosts.utilities });
   if (cashFlowData.sunkCosts.otherExpenses > 0) sunkItems.push({ label: 'Living Expenses', value: cashFlowData.sunkCosts.otherExpenses });
+  if (cashFlowData.sunkCosts.lifeEventExpenses > 0) sunkItems.push({ label: 'Life Events', value: cashFlowData.sunkCosts.lifeEventExpenses });
   if (cashFlowData.wealthBuilding.investments > 0) wealthItems.push({ label: 'Investments', value: cashFlowData.wealthBuilding.investments });
 
   return (

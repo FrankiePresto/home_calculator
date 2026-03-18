@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useStore } from '@/lib/store';
 import { SelectInput, InfoTooltip } from '@/components/shared';
 import { formatCurrency } from '@/lib/utils/formatters';
+import { calculateMonthlyMortgagePayment } from '@/lib/engine/mortgage';
 import { LifeEventsTimeline } from '@/components/inputs/LifeEventsTimeline';
 
 export function ReviewStep() {
@@ -23,13 +24,13 @@ export function ReviewStep() {
   const totalUpfront = downPayment + closingCosts;
   const canAfford = profile.currentInvestmentPortfolio >= totalUpfront;
 
-  // Monthly mortgage
+  // Monthly mortgage using engine function
   const principal = buyScenario.purchasePrice - downPayment;
-  const monthlyRate = buyScenario.interestRate / 100 / 12;
-  const numPayments = buyScenario.amortizationYears * 12;
-  const monthlyMortgage = monthlyRate > 0
-    ? (principal * monthlyRate * Math.pow(1 + monthlyRate, numPayments)) / (Math.pow(1 + monthlyRate, numPayments) - 1)
-    : principal / numPayments;
+  const monthlyMortgage = calculateMonthlyMortgagePayment(
+    principal,
+    buyScenario.interestRate,
+    buyScenario.amortizationYears
+  );
   
   const monthlyOwnershipCosts = 
     monthlyMortgage +
@@ -106,7 +107,11 @@ export function ReviewStep() {
             { 
               label: 'Total Monthly', 
               value: formatCurrency(
-                calculateMonthlyPayment(buyScenario2) +
+                calculateMonthlyMortgagePayment(
+                  buyScenario2.purchasePrice * (1 - buyScenario2.downPaymentPercent / 100),
+                  buyScenario2.interestRate,
+                  buyScenario2.amortizationYears
+                ) +
                 buyScenario2.monthlyPropertyTax +
                 buyScenario2.monthlyHomeInsurance +
                 buyScenario2.monthlyStrataFees +
@@ -223,21 +228,6 @@ function SummaryCard({ title, icon, items, color = 'default', warning }: Summary
       )}
     </div>
   );
-}
-
-function calculateMonthlyPayment(scenario: {
-  purchasePrice: number;
-  downPaymentPercent: number;
-  interestRate: number;
-  amortizationYears: number;
-}) {
-  const downPayment = scenario.purchasePrice * (scenario.downPaymentPercent / 100);
-  const principal = scenario.purchasePrice - downPayment;
-  const monthlyRate = scenario.interestRate / 100 / 12;
-  const numPayments = scenario.amortizationYears * 12;
-  return monthlyRate > 0
-    ? (principal * monthlyRate * Math.pow(1 + monthlyRate, numPayments)) / (Math.pow(1 + monthlyRate, numPayments) - 1)
-    : principal / numPayments;
 }
 
 function WalletIcon({ className }: { className?: string }) {

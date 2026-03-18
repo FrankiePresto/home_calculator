@@ -19,7 +19,6 @@ export function HeroInsight() {
   const winner = rentFinalNetWorth > buyFinalNetWorth ? 'rent' : 'buy';
   const difference = Math.abs(rentFinalNetWorth - buyFinalNetWorth);
 
-  const winnerColor = winner === 'rent' ? 'info' : 'success';
   const bgClass = winner === 'rent' ? 'bg-info/5 border-info/20' : 'bg-success/5 border-success/20';
   const textClass = winner === 'rent' ? 'text-info' : 'text-success';
 

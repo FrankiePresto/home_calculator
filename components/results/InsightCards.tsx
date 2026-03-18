@@ -71,7 +71,7 @@ export function InsightCards() {
         </div>
 
         {/* Equivalent Rent Card */}
-        <div className="card p-6 border-l-4 border-l-purple-500">
+        <div className="card p-6 border-l-4 border-l-accent">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center">
               Equivalent Rent

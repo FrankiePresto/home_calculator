@@ -17,8 +17,8 @@ export function WizardNavigation({ onCalculate }: WizardNavigationProps) {
     return null;
   }
 
-  const handleCalculate = () => {
-    calculate();
+  const handleCalculate = async () => {
+    await calculate();
     goToResults();
     onCalculate?.();
   };

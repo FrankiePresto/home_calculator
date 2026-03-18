@@ -5,6 +5,7 @@ import { useStore } from '@/lib/store';
 import { BuyScenario } from '@/lib/engine/types';
 import { CurrencyInput, PercentInput, SliderInput, SelectInput, InfoTooltip } from '@/components/shared';
 import { formatCurrency } from '@/lib/utils/formatters';
+import { calculateMonthlyMortgagePayment } from '@/lib/engine/mortgage';
 
 export function BuyStep() {
   const scenario = useStore((state) => state.buyScenario);
@@ -117,13 +118,13 @@ function BuyScenarioFormContent({
   const canAfford = profile.currentInvestmentPortfolio >= totalUpfront;
   const needsInsurance = scenario.downPaymentPercent < 20;
 
-  // Monthly costs
+  // Monthly costs using engine function
   const principal = scenario.purchasePrice - downPaymentAmount;
-  const monthlyRate = scenario.interestRate / 100 / 12;
-  const numPayments = scenario.amortizationYears * 12;
-  const monthlyMortgage = monthlyRate > 0
-    ? (principal * monthlyRate * Math.pow(1 + monthlyRate, numPayments)) / (Math.pow(1 + monthlyRate, numPayments) - 1)
-    : principal / numPayments;
+  const monthlyMortgage = calculateMonthlyMortgagePayment(
+    principal,
+    scenario.interestRate,
+    scenario.amortizationYears
+  );
   
   const monthlyOngoing = 
     scenario.monthlyPropertyTax +
