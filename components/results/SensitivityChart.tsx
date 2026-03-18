@@ -63,28 +63,28 @@ export function SensitivityChart() {
     if (!data) return null;
 
     return (
-      <div className="bg-white p-4 shadow-lg rounded-lg border border-gray-200 max-w-xs">
-        <p className="font-semibold text-gray-900 mb-2">{label}</p>
-        <p className="text-sm text-gray-600 mb-2">
+      <div className="bg-card p-4 shadow-lg rounded-lg border border-border max-w-xs">
+        <p className="font-semibold text-foreground mb-2">{label}</p>
+        <p className="text-sm text-muted-foreground mb-2">
           Base: {data.baseValue}% → Testing ±2%
         </p>
         <div className="space-y-1 text-sm">
           <div className="flex justify-between">
             <span>At {data.minLabel}:</span>
-            <span className={data.minChange > 0 ? 'text-green-600' : 'text-red-600'}>
+            <span className={`tabular-nums ${data.minChange > 0 ? 'text-success' : 'text-destructive'}`}>
               {data.minChange > 0 ? '+' : ''}{formatCurrency(data.minChange)}
             </span>
           </div>
           <div className="flex justify-between">
             <span>At {data.maxLabel}:</span>
-            <span className={data.maxChange > 0 ? 'text-green-600' : 'text-red-600'}>
+            <span className={`tabular-nums ${data.maxChange > 0 ? 'text-success' : 'text-destructive'}`}>
               {data.maxChange > 0 ? '+' : ''}{formatCurrency(data.maxChange)}
             </span>
           </div>
         </div>
         {data.baseBreakeven && (
-          <div className="mt-2 pt-2 border-t border-gray-200 text-sm">
-            <p className="text-gray-600">
+          <div className="mt-2 pt-2 border-t border-border text-sm">
+            <p className="text-muted-foreground">
               Breakeven shifts: {data.minBreakeven?.toFixed(1) ?? 'Never'} → {data.maxBreakeven?.toFixed(1) ?? 'Never'} years
             </p>
           </div>
@@ -94,11 +94,11 @@ export function SensitivityChart() {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+    <div className="card p-6">
+      <h3 className="section-header mb-2">
         Sensitivity Analysis
       </h3>
-      <p className="text-sm text-gray-600 mb-4">
+      <p className="text-sm text-muted-foreground mb-6">
         Impact on net worth difference (Buy vs Rent) when variables change by ±2%
       </p>
 
@@ -109,30 +109,30 @@ export function SensitivityChart() {
             layout="vertical"
             margin={{ top: 5, right: 30, left: 120, bottom: 5 }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+            <CartesianGrid strokeDasharray="3 3" stroke="rgb(214 211 209)" />
             <XAxis
               type="number"
               domain={[-maxAbsValue * 1.1, maxAbsValue * 1.1]}
               tickFormatter={(value) => `${value > 0 ? '+' : ''}${(value / 1000).toFixed(0)}K`}
-              stroke="#6b7280"
+              stroke="rgb(87 83 78)"
               fontSize={12}
             />
             <YAxis
               type="category"
               dataKey="variable"
-              stroke="#6b7280"
+              stroke="rgb(87 83 78)"
               fontSize={12}
               width={110}
             />
             <Tooltip content={<CustomTooltip />} />
-            <ReferenceLine x={0} stroke="#374151" strokeWidth={2} />
+            <ReferenceLine x={0} stroke="rgb(28 25 23)" strokeWidth={2} />
 
             {/* Negative impact (when variable decreases) */}
             <Bar dataKey="minChange" name="At -2%">
               {chartData.map((entry, index) => (
                 <Cell
                   key={`min-${index}`}
-                  fill={entry.minChange >= 0 ? '#22c55e' : '#ef4444'}
+                  fill={entry.minChange >= 0 ? 'rgb(5 150 105)' : 'rgb(225 29 72)'}
                 />
               ))}
             </Bar>
@@ -142,7 +142,7 @@ export function SensitivityChart() {
               {chartData.map((entry, index) => (
                 <Cell
                   key={`max-${index}`}
-                  fill={entry.maxChange >= 0 ? '#22c55e' : '#ef4444'}
+                  fill={entry.maxChange >= 0 ? 'rgb(5 150 105)' : 'rgb(225 29 72)'}
                 />
               ))}
             </Bar>
@@ -151,22 +151,22 @@ export function SensitivityChart() {
       </div>
 
       {/* Legend and interpretation */}
-      <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="p-3 bg-gray-50 rounded-lg">
-          <h4 className="font-medium text-gray-700 mb-2">How to Read This</h4>
-          <ul className="text-sm text-gray-600 space-y-1">
-            <li>• <span className="text-green-600 font-medium">Green bars</span> = Better for buying</li>
-            <li>• <span className="text-red-600 font-medium">Red bars</span> = Better for renting</li>
+      <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="p-4 bg-secondary rounded-xl">
+          <h4 className="font-medium text-foreground mb-2">How to Read This</h4>
+          <ul className="text-sm text-muted-foreground space-y-1.5">
+            <li>• <span className="text-success font-medium">Green bars</span> = Better for buying</li>
+            <li>• <span className="text-destructive font-medium">Red bars</span> = Better for renting</li>
             <li>• Longer bars = More sensitive to changes</li>
           </ul>
         </div>
 
-        <div className="p-3 bg-gray-50 rounded-lg">
-          <h4 className="font-medium text-gray-700 mb-2">Key Insights</h4>
-          <ul className="text-sm text-gray-600 space-y-1">
+        <div className="p-4 bg-secondary rounded-xl">
+          <h4 className="font-medium text-foreground mb-2">Key Insights</h4>
+          <ul className="text-sm text-muted-foreground space-y-1.5">
             {chartData.slice(0, 2).map((d) => (
               <li key={d.variable}>
-                • <strong>{d.variable}</strong> has {d.range > chartData[chartData.length - 1].range * 2 ? 'high' : 'moderate'} impact
+                • <strong className="text-foreground">{d.variable}</strong> has {d.range > chartData[chartData.length - 1].range * 2 ? 'high' : 'moderate'} impact
               </li>
             ))}
           </ul>
@@ -174,29 +174,29 @@ export function SensitivityChart() {
       </div>
 
       {/* Detailed breakdown */}
-      <div className="mt-4 overflow-x-auto">
+      <div className="mt-6 overflow-x-auto rounded-lg border border-border">
         <table className="min-w-full text-sm">
           <thead>
-            <tr className="border-b border-gray-200">
-              <th className="text-left py-2 text-gray-600 font-medium">Variable</th>
-              <th className="text-center py-2 text-gray-600 font-medium">Base</th>
-              <th className="text-center py-2 text-gray-600 font-medium">At -2%</th>
-              <th className="text-center py-2 text-gray-600 font-medium">At +2%</th>
-              <th className="text-center py-2 text-gray-600 font-medium">Range</th>
+            <tr className="bg-secondary">
+              <th className="text-left py-3 px-3 text-muted-foreground font-medium">Variable</th>
+              <th className="text-center py-3 px-3 text-muted-foreground font-medium">Base</th>
+              <th className="text-center py-3 px-3 text-muted-foreground font-medium">At -2%</th>
+              <th className="text-center py-3 px-3 text-muted-foreground font-medium">At +2%</th>
+              <th className="text-center py-3 px-3 text-muted-foreground font-medium">Range</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-border">
             {chartData.map((row) => (
-              <tr key={row.variable} className="border-b border-gray-100">
-                <td className="py-2 text-gray-900">{row.variable}</td>
-                <td className="py-2 text-center text-gray-600">{row.baseValue}%</td>
-                <td className={`py-2 text-center ${row.minChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              <tr key={row.variable} className="hover:bg-secondary/50">
+                <td className="py-2.5 px-3 text-foreground">{row.variable}</td>
+                <td className="py-2.5 px-3 text-center text-muted-foreground">{row.baseValue}%</td>
+                <td className={`py-2.5 px-3 text-center tabular-nums ${row.minChange >= 0 ? 'text-success' : 'text-destructive'}`}>
                   {row.minChange >= 0 ? '+' : ''}{formatCurrency(row.minChange)}
                 </td>
-                <td className={`py-2 text-center ${row.maxChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                <td className={`py-2.5 px-3 text-center tabular-nums ${row.maxChange >= 0 ? 'text-success' : 'text-destructive'}`}>
                   {row.maxChange >= 0 ? '+' : ''}{formatCurrency(row.maxChange)}
                 </td>
-                <td className="py-2 text-center text-gray-900 font-medium">
+                <td className="py-2.5 px-3 text-center text-foreground font-medium tabular-nums">
                   {formatCurrency(row.range)}
                 </td>
               </tr>

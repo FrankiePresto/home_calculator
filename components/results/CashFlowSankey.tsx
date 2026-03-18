@@ -3,16 +3,9 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '@/lib/store';
 import { formatCurrency } from '@/lib/utils/formatters';
-import { categorizeAnnualCashFlow, AnnualCashFlow } from '@/lib/engine/cashflow';
+import { categorizeAnnualCashFlow } from '@/lib/engine/cashflow';
 
 type ScenarioType = 'rent' | 'buy';
-
-interface FlowItem {
-  label: string;
-  value: number;
-  color: string;
-  type: 'sunk' | 'wealth';
-}
 
 export function CashFlowSankey() {
   const results = useStore((state) => state.results);
@@ -36,303 +29,142 @@ export function CashFlowSankey() {
 
   if (!cashFlowData) return null;
 
-  // Build flow items
-  const sunkItems: FlowItem[] = [];
-  const wealthItems: FlowItem[] = [];
-
-  if (selectedScenario === 'rent') {
-    if (cashFlowData.sunkCosts.rent > 0) {
-      sunkItems.push({ label: 'Rent', value: cashFlowData.sunkCosts.rent, color: '#3b82f6', type: 'sunk' });
-    }
-    if (cashFlowData.sunkCosts.homeInsurance > 0) {
-      sunkItems.push({ label: 'Insurance', value: cashFlowData.sunkCosts.homeInsurance, color: '#eab308', type: 'sunk' });
-    }
-  } else {
-    if (cashFlowData.sunkCosts.mortgageInterest > 0) {
-      sunkItems.push({ label: 'Mortgage Interest', value: cashFlowData.sunkCosts.mortgageInterest, color: '#ef4444', type: 'sunk' });
-    }
-    if (cashFlowData.sunkCosts.propertyTax > 0) {
-      sunkItems.push({ label: 'Property Tax', value: cashFlowData.sunkCosts.propertyTax, color: '#f97316', type: 'sunk' });
-    }
-    if (cashFlowData.sunkCosts.homeInsurance > 0) {
-      sunkItems.push({ label: 'Home Insurance', value: cashFlowData.sunkCosts.homeInsurance, color: '#eab308', type: 'sunk' });
-    }
-    if (cashFlowData.sunkCosts.maintenance > 0) {
-      sunkItems.push({ label: 'Maintenance', value: cashFlowData.sunkCosts.maintenance, color: '#84cc16', type: 'sunk' });
-    }
-    if (cashFlowData.sunkCosts.strataFees > 0) {
-      sunkItems.push({ label: 'Strata/HOA', value: cashFlowData.sunkCosts.strataFees, color: '#22c55e', type: 'sunk' });
-    }
-    if (cashFlowData.wealthBuilding.mortgagePrincipal > 0) {
-      wealthItems.push({ label: 'Mortgage Principal', value: cashFlowData.wealthBuilding.mortgagePrincipal, color: '#10b981', type: 'wealth' });
-    }
-  }
-
-  // Common items
-  if (cashFlowData.sunkCosts.utilities > 0) {
-    sunkItems.push({ label: 'Utilities', value: cashFlowData.sunkCosts.utilities, color: '#06b6d4', type: 'sunk' });
-  }
-  if (cashFlowData.sunkCosts.otherExpenses > 0) {
-    sunkItems.push({ label: 'Living Expenses', value: cashFlowData.sunkCosts.otherExpenses, color: '#8b5cf6', type: 'sunk' });
-  }
-  if (cashFlowData.sunkCosts.lifeEventExpenses > 0) {
-    sunkItems.push({ label: 'Life Events', value: cashFlowData.sunkCosts.lifeEventExpenses, color: '#ec4899', type: 'sunk' });
-  }
-  if (cashFlowData.wealthBuilding.investments > 0) {
-    wealthItems.push({ label: 'Investments', value: cashFlowData.wealthBuilding.investments, color: '#2563eb', type: 'wealth' });
-  }
-
-  const maxValue = Math.max(
-    ...sunkItems.map(i => i.value),
-    ...wealthItems.map(i => i.value),
-    1
-  );
-
   const totalIncome = cashFlowData.grossIncome;
   const sunkPercent = (cashFlowData.totalSunk / totalIncome) * 100;
   const wealthPercent = (cashFlowData.totalWealth / totalIncome) * 100;
-  const unaccounted = totalIncome - cashFlowData.totalSunk - cashFlowData.totalWealth;
+
+  // Build categorized items
+  const sunkItems = [];
+  const wealthItems = [];
+
+  if (selectedScenario === 'rent') {
+    if (cashFlowData.sunkCosts.rent > 0) sunkItems.push({ label: 'Rent', value: cashFlowData.sunkCosts.rent });
+    if (cashFlowData.sunkCosts.homeInsurance > 0) sunkItems.push({ label: 'Insurance', value: cashFlowData.sunkCosts.homeInsurance });
+  } else {
+    if (cashFlowData.sunkCosts.mortgageInterest > 0) sunkItems.push({ label: 'Mortgage Interest', value: cashFlowData.sunkCosts.mortgageInterest });
+    if (cashFlowData.sunkCosts.propertyTax > 0) sunkItems.push({ label: 'Property Tax', value: cashFlowData.sunkCosts.propertyTax });
+    if (cashFlowData.sunkCosts.homeInsurance > 0) sunkItems.push({ label: 'Insurance', value: cashFlowData.sunkCosts.homeInsurance });
+    if (cashFlowData.sunkCosts.maintenance > 0) sunkItems.push({ label: 'Maintenance', value: cashFlowData.sunkCosts.maintenance });
+    if (cashFlowData.sunkCosts.strataFees > 0) sunkItems.push({ label: 'Strata/HOA', value: cashFlowData.sunkCosts.strataFees });
+    if (cashFlowData.wealthBuilding.mortgagePrincipal > 0) wealthItems.push({ label: 'Mortgage Principal', value: cashFlowData.wealthBuilding.mortgagePrincipal });
+  }
+
+  if (cashFlowData.sunkCosts.utilities > 0) sunkItems.push({ label: 'Utilities', value: cashFlowData.sunkCosts.utilities });
+  if (cashFlowData.sunkCosts.otherExpenses > 0) sunkItems.push({ label: 'Living Expenses', value: cashFlowData.sunkCosts.otherExpenses });
+  if (cashFlowData.sunkCosts.lifeEventExpenses > 0) sunkItems.push({ label: 'Life Events', value: cashFlowData.sunkCosts.lifeEventExpenses });
+  if (cashFlowData.wealthBuilding.investments > 0) wealthItems.push({ label: 'Investments', value: cashFlowData.wealthBuilding.investments });
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">
-          Cash Flow Breakdown
-        </h3>
-        <div className="flex items-center gap-4">
-          {/* Scenario toggle */}
-          <div className="flex rounded-md shadow-sm">
+    <div className="card p-6">
+      {/* Header with controls */}
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+        <h3 className="section-header">Cash Flow Breakdown</h3>
+        <div className="flex items-center gap-3">
+          <div className="flex rounded-lg overflow-hidden border border-border text-sm">
             <button
               onClick={() => setSelectedScenario('rent')}
-              className={`px-3 py-1.5 text-sm font-medium rounded-l-md border ${
-                selectedScenario === 'rent'
-                  ? 'bg-blue-50 text-blue-700 border-blue-300'
-                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+              className={`px-3 py-1.5 font-medium transition-colors ${
+                selectedScenario === 'rent' ? 'bg-accent text-accent-foreground' : 'bg-background hover:bg-secondary'
               }`}
             >
               Rent
             </button>
             <button
               onClick={() => setSelectedScenario('buy')}
-              className={`px-3 py-1.5 text-sm font-medium rounded-r-md border-t border-r border-b ${
-                selectedScenario === 'buy'
-                  ? 'bg-green-50 text-green-700 border-green-300'
-                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+              className={`px-3 py-1.5 font-medium transition-colors ${
+                selectedScenario === 'buy' ? 'bg-accent text-accent-foreground' : 'bg-background hover:bg-secondary'
               }`}
             >
               Buy
             </button>
           </div>
-
-          {/* Year selector */}
           <select
             value={selectedYear}
             onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-            className="rounded-md border-gray-300 text-sm"
+            className="rounded-lg border border-border bg-background px-3 py-1.5 text-sm"
           >
             {Array.from({ length: timeframe }, (_, i) => (
-              <option key={i + 1} value={i + 1}>
-                Year {i + 1}
-              </option>
+              <option key={i + 1} value={i + 1}>Year {i + 1}</option>
             ))}
           </select>
         </div>
       </div>
 
-      {/* Income header */}
-      <div className="mb-6 p-4 bg-gray-100 rounded-lg">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-gray-600">Annual {financialProfile.includeTaxes ? 'Net' : 'Gross'} Income</p>
-            <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalIncome)}</p>
-          </div>
-          <div className="text-right">
-            <p className="text-sm text-gray-600">Year {selectedYear}</p>
-            <p className="text-lg font-semibold text-gray-700">
-              {selectedScenario === 'rent' ? 'Renting' : 'Buying'}
-            </p>
-          </div>
+      {/* Summary row */}
+      <div className="grid grid-cols-4 gap-4 mb-6 p-4 bg-secondary rounded-lg text-center">
+        <div>
+          <p className="text-xs text-muted-foreground mb-1">{financialProfile.includeTaxes ? 'Net' : 'Gross'} Income</p>
+          <p className="text-lg font-semibold tabular-nums">{formatCurrency(totalIncome)}</p>
+        </div>
+        <div>
+          <p className="text-xs text-muted-foreground mb-1">Sunk Costs</p>
+          <p className="text-lg font-semibold text-destructive tabular-nums">{formatCurrency(cashFlowData.totalSunk)}</p>
+        </div>
+        <div>
+          <p className="text-xs text-muted-foreground mb-1">Wealth Building</p>
+          <p className="text-lg font-semibold text-success tabular-nums">{formatCurrency(cashFlowData.totalWealth)}</p>
+        </div>
+        <div>
+          <p className="text-xs text-muted-foreground mb-1">Efficiency</p>
+          <p className="text-lg font-semibold tabular-nums">{wealthPercent.toFixed(0)}%</p>
         </div>
       </div>
 
-      {/* Monthly Cash Flow Summary */}
-      <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-        <p className="text-sm font-medium text-blue-700 mb-2">Monthly Cash Flow</p>
-        <div className="grid grid-cols-4 gap-4 text-sm">
-          <div>
-            <p className="text-blue-600">{financialProfile.includeTaxes ? 'Net ' : ''}Income</p>
-            <p className="font-semibold text-blue-900">{formatCurrency(totalIncome / 12)}/mo</p>
-          </div>
-          <div>
-            <p className="text-red-600">Sunk Costs</p>
-            <p className="font-semibold text-red-700">-{formatCurrency(cashFlowData.totalSunk / 12)}/mo</p>
-          </div>
-          <div>
-            <p className="text-green-600">Wealth Building</p>
-            <p className="font-semibold text-green-700">+{formatCurrency(cashFlowData.totalWealth / 12)}/mo</p>
-          </div>
-          <div>
-            <p className="text-gray-600">Remaining</p>
-            <p className="font-semibold text-gray-700">{formatCurrency((totalIncome - cashFlowData.totalSunk - cashFlowData.totalWealth) / 12)}/mo</p>
-          </div>
+      {/* Allocation bar */}
+      <div className="mb-6">
+        <div className="h-3 flex rounded-full overflow-hidden">
+          <div className="bg-destructive" style={{ width: `${sunkPercent}%` }} title={`Sunk: ${sunkPercent.toFixed(0)}%`} />
+          <div className="bg-success" style={{ width: `${wealthPercent}%` }} title={`Wealth: ${wealthPercent.toFixed(0)}%`} />
+          <div className="bg-muted flex-1" />
+        </div>
+        <div className="flex justify-between mt-2 text-xs text-muted-foreground">
+          <span>Sunk: {sunkPercent.toFixed(0)}%</span>
+          <span>Wealth: {wealthPercent.toFixed(0)}%</span>
         </div>
       </div>
 
-      {/* Mortgage Payment Breakdown - Buy scenario only */}
-      {selectedScenario === 'buy' && cashFlowData.sunkCosts.mortgageInterest + cashFlowData.wealthBuilding.mortgagePrincipal > 0 && (() => {
-        const monthlyInterest = cashFlowData.sunkCosts.mortgageInterest / 12;
-        const monthlyPrincipal = cashFlowData.wealthBuilding.mortgagePrincipal / 12;
-        const monthlyPayment = monthlyInterest + monthlyPrincipal;
-        const interestPercent = (monthlyInterest / monthlyPayment) * 100;
-        const principalPercent = (monthlyPrincipal / monthlyPayment) * 100;
-
-        return (
-          <div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm font-medium text-gray-700">Monthly Mortgage Payment</p>
-              <p className="text-lg font-bold text-gray-900">{formatCurrency(monthlyPayment)}</p>
-            </div>
-            <div className="h-6 flex rounded overflow-hidden">
-              <div
-                className="bg-red-400 flex items-center justify-center text-xs font-medium text-white transition-all duration-300"
-                style={{ width: `${interestPercent}%` }}
-                title={`Interest: ${formatCurrency(monthlyInterest)}`}
-              >
-                {interestPercent > 20 && `${interestPercent.toFixed(0)}%`}
-              </div>
-              <div
-                className="bg-green-500 flex items-center justify-center text-xs font-medium text-white transition-all duration-300"
-                style={{ width: `${principalPercent}%` }}
-                title={`Principal: ${formatCurrency(monthlyPrincipal)}`}
-              >
-                {principalPercent > 20 && `${principalPercent.toFixed(0)}%`}
-              </div>
-            </div>
-            <div className="flex justify-between mt-2 text-xs">
-              <span className="text-red-600">
-                Interest: {formatCurrency(monthlyInterest)} ({interestPercent.toFixed(0)}%)
-              </span>
-              <span className="text-green-600">
-                Principal: {formatCurrency(monthlyPrincipal)} ({principalPercent.toFixed(0)}%)
-              </span>
-            </div>
-          </div>
-        );
-      })()}
-
-      {/* Flow visualization */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* Two-column breakdown */}
+      <div className="grid grid-cols-2 gap-6">
         {/* Sunk Costs */}
         <div>
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-3 h-3 rounded-full bg-red-500"></div>
-            <h4 className="font-semibold text-gray-700">Sunk Costs</h4>
-            <span className="text-sm text-gray-500">
-              ({sunkPercent.toFixed(0)}% of income)
-            </span>
-          </div>
+          <h4 className="text-sm font-medium text-destructive mb-3 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-destructive"></span>
+            Sunk Costs
+          </h4>
           <div className="space-y-2">
             {sunkItems.map((item, idx) => (
-              <div key={idx} className="flex items-center gap-3">
-                <div className="w-32 text-sm text-gray-600 truncate">{item.label}</div>
-                <div className="flex-1 h-6 bg-gray-100 rounded overflow-hidden">
-                  <div
-                    className="h-full rounded transition-all duration-300"
-                    style={{
-                      width: `${(item.value / maxValue) * 100}%`,
-                      backgroundColor: item.color,
-                    }}
-                  />
-                </div>
-                <div className="w-24 text-sm font-medium text-right">
-                  {formatCurrency(item.value)}
-                </div>
+              <div key={idx} className="flex justify-between text-sm">
+                <span className="text-muted-foreground">{item.label}</span>
+                <span className="font-medium tabular-nums">{formatCurrency(item.value)}</span>
               </div>
             ))}
-            <div className="pt-2 mt-2 border-t border-gray-200 flex items-center gap-3">
-              <div className="w-32 text-sm font-semibold text-gray-700">Total Sunk</div>
-              <div className="flex-1"></div>
-              <div className="w-24 text-sm font-bold text-red-600 text-right">
-                {formatCurrency(cashFlowData.totalSunk)}
-              </div>
+            <div className="pt-2 mt-2 border-t border-border flex justify-between text-sm font-semibold">
+              <span>Total</span>
+              <span className="text-destructive tabular-nums">{formatCurrency(cashFlowData.totalSunk)}</span>
             </div>
           </div>
         </div>
 
         {/* Wealth Building */}
         <div>
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-3 h-3 rounded-full bg-green-500"></div>
-            <h4 className="font-semibold text-gray-700">Wealth Building</h4>
-            <span className="text-sm text-gray-500">
-              ({wealthPercent.toFixed(0)}% of income)
-            </span>
-          </div>
+          <h4 className="text-sm font-medium text-success mb-3 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-success"></span>
+            Wealth Building
+          </h4>
           <div className="space-y-2">
-            {wealthItems.length > 0 ? (
-              wealthItems.map((item, idx) => (
-                <div key={idx} className="flex items-center gap-3">
-                  <div className="w-32 text-sm text-gray-600 truncate">{item.label}</div>
-                  <div className="flex-1 h-6 bg-gray-100 rounded overflow-hidden">
-                    <div
-                      className="h-full rounded transition-all duration-300"
-                      style={{
-                        width: `${(item.value / maxValue) * 100}%`,
-                        backgroundColor: item.color,
-                      }}
-                    />
-                  </div>
-                  <div className="w-24 text-sm font-medium text-right">
-                    {formatCurrency(item.value)}
-                  </div>
-                </div>
-              ))
-            ) : (
-              <p className="text-sm text-gray-500 italic">No wealth building this year</p>
-            )}
-            <div className="pt-2 mt-2 border-t border-gray-200 flex items-center gap-3">
-              <div className="w-32 text-sm font-semibold text-gray-700">Total Wealth</div>
-              <div className="flex-1"></div>
-              <div className="w-24 text-sm font-bold text-green-600 text-right">
-                {formatCurrency(cashFlowData.totalWealth)}
+            {wealthItems.length > 0 ? wealthItems.map((item, idx) => (
+              <div key={idx} className="flex justify-between text-sm">
+                <span className="text-muted-foreground">{item.label}</span>
+                <span className="font-medium tabular-nums">{formatCurrency(item.value)}</span>
               </div>
+            )) : (
+              <p className="text-sm text-muted-foreground italic">No wealth building this year</p>
+            )}
+            <div className="pt-2 mt-2 border-t border-border flex justify-between text-sm font-semibold">
+              <span>Total</span>
+              <span className="text-success tabular-nums">{formatCurrency(cashFlowData.totalWealth)}</span>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Summary bar */}
-      <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-        <p className="text-sm text-gray-600 mb-2">Income Allocation</p>
-        <div className="h-8 flex rounded-lg overflow-hidden">
-          <div
-            className="bg-red-400 flex items-center justify-center text-xs font-medium text-white"
-            style={{ width: `${sunkPercent}%` }}
-            title={`Sunk Costs: ${sunkPercent.toFixed(1)}%`}
-          >
-            {sunkPercent > 15 && `${sunkPercent.toFixed(0)}%`}
-          </div>
-          <div
-            className="bg-green-500 flex items-center justify-center text-xs font-medium text-white"
-            style={{ width: `${wealthPercent}%` }}
-            title={`Wealth Building: ${wealthPercent.toFixed(1)}%`}
-          >
-            {wealthPercent > 15 && `${wealthPercent.toFixed(0)}%`}
-          </div>
-          {unaccounted > 0 && (
-            <div
-              className="bg-gray-300 flex items-center justify-center text-xs font-medium text-gray-600"
-              style={{ width: `${(unaccounted / totalIncome) * 100}%` }}
-              title={financialProfile.includeTaxes ? "Remaining Funds" : "Unallocated/Tax"}
-            >
-              {(unaccounted / totalIncome) * 100 > 15 && (financialProfile.includeTaxes ? 'Remaining' : 'Other')}
-            </div>
-          )}
-        </div>
-        <div className="flex justify-between mt-2 text-xs text-gray-500">
-          <span>Sunk: {formatCurrency(cashFlowData.totalSunk)}</span>
-          <span>Wealth: {formatCurrency(cashFlowData.totalWealth)}</span>
-          {unaccounted > 0 && <span>{financialProfile.includeTaxes ? 'Remaining' : 'Other'}: {formatCurrency(unaccounted)}</span>}
         </div>
       </div>
     </div>

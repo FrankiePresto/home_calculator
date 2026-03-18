@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import { formatCurrency } from '@/lib/utils/formatters';
 import { calculateMonthlyMortgagePayment } from '@/lib/engine/mortgage';
@@ -114,25 +115,29 @@ export function MathBreakdown() {
   const winnerLabel = winner === 'rent' ? 'Renting' : 'Buying';
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">
+    <div className="card p-6">
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="section-header">
           The Math Behind the Numbers
         </h3>
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="text-sm text-blue-600 hover:text-blue-800"
+          className="inline-flex items-center gap-1 text-sm text-accent hover:text-amber-700 font-medium transition-colors"
         >
-          {isExpanded ? 'Show Less' : 'Show More'}
+          {isExpanded ? (
+            <>Show Less <ChevronUp className="w-4 h-4" /></>
+          ) : (
+            <>Show More <ChevronDown className="w-4 h-4" /></>
+          )}
         </button>
       </div>
 
       {/* Summary Explanation */}
-      <div className={`p-4 rounded-lg mb-6 ${winner === 'rent' ? 'bg-blue-50 border border-blue-200' : 'bg-green-50 border border-green-200'}`}>
-        <p className={`text-sm ${winner === 'rent' ? 'text-blue-800' : 'text-green-800'}`}>
-          <strong>Why {winnerLabel} wins by {formatCurrency(Math.abs(breakdown.finalDifference))} after {timeframe} years:</strong>
+      <div className={`p-5 rounded-xl mb-6 ${winner === 'rent' ? 'bg-info/10 border border-info/20' : 'bg-success/10 border border-success/20'}`}>
+        <p className={`text-sm font-medium ${winner === 'rent' ? 'text-info' : 'text-success'}`}>
+          Why {winnerLabel} wins by {formatCurrency(Math.abs(breakdown.finalDifference))} after {timeframe} years:
         </p>
-        <ul className={`mt-2 text-sm space-y-1 ${winner === 'rent' ? 'text-blue-700' : 'text-green-700'}`}>
+        <ul className={`mt-3 text-sm space-y-1.5 ${winner === 'rent' ? 'text-info/90' : 'text-success/90'}`}>
           {winner === 'rent' ? (
             <>
               <li>• You keep {formatCurrency(breakdown.totalUpfront)} invested from Day 1 (no down payment/closing costs)</li>
@@ -159,8 +164,8 @@ export function MathBreakdown() {
 
       {/* Renter's Investment Advantage - only show when renting wins */}
       {winner === 'rent' && breakdown.savingsDiff > 0 && (
-        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg mb-6">
-          <p className="text-sm text-blue-800">
+        <div className="p-4 bg-info/10 border border-info/20 rounded-xl mb-6">
+          <p className="text-sm text-info">
             <strong>Investment Advantage:</strong> When renting, you invest{' '}
             {formatCurrency(breakdown.savingsDiff)} more per month into your portfolio. Over {timeframe} years,
             this grows to {formatCurrency(breakdown.yearlyData[timeframe].rentPortfolio)}.
@@ -171,79 +176,79 @@ export function MathBreakdown() {
       {/* Side-by-side comparison */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         {/* Rent Scenario */}
-        <div className="border border-blue-200 rounded-lg overflow-hidden">
-          <div className="bg-blue-100 px-4 py-2">
-            <h4 className="font-semibold text-blue-800">Rent Scenario</h4>
+        <div className="border border-info/30 rounded-xl overflow-hidden">
+          <div className="bg-info/10 px-4 py-3">
+            <h4 className="font-semibold text-info">Rent Scenario</h4>
           </div>
           <div className="p-4 space-y-3">
             <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Starting Portfolio:</span>
-              <span className="font-medium">{formatCurrency(breakdown.rentStartingPortfolio)}</span>
+              <span className="text-muted-foreground">Starting Portfolio:</span>
+              <span className="font-medium tabular-nums">{formatCurrency(breakdown.rentStartingPortfolio)}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Monthly Housing Cost:</span>
-              <span className="font-medium">{formatCurrency(breakdown.rentMonthlyHousing)}</span>
+              <span className="text-muted-foreground">Monthly Housing Cost:</span>
+              <span className="font-medium tabular-nums">{formatCurrency(breakdown.rentMonthlyHousing)}</span>
             </div>
             {breakdown.rentMonthlyLifeEvents > 0 && (
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Life Event Costs:</span>
-                <span className="font-medium text-red-600">-{formatCurrency(breakdown.rentMonthlyLifeEvents)}</span>
+                <span className="text-muted-foreground">Life Event Costs:</span>
+                <span className="font-medium text-destructive tabular-nums">-{formatCurrency(breakdown.rentMonthlyLifeEvents)}</span>
               </div>
             )}
             <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Monthly Investment:</span>
-              <span className="font-medium text-blue-600">+{formatCurrency(breakdown.rentMonthlySavings)}</span>
+              <span className="text-muted-foreground">Monthly Investment:</span>
+              <span className="font-medium text-info tabular-nums">+{formatCurrency(breakdown.rentMonthlySavings)}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Investment Return:</span>
+              <span className="text-muted-foreground">Investment Return:</span>
               <span className="font-medium">{financialProfile.expectedInvestmentReturn}% annually</span>
             </div>
-            <div className="pt-2 border-t border-gray-200 flex justify-between">
-              <span className="font-medium text-gray-700">Net Worth at Year {timeframe}:</span>
-              <span className="font-bold text-blue-600">{formatCurrency(breakdown.rentFinalNetWorth)}</span>
+            <div className="pt-3 border-t border-border flex justify-between">
+              <span className="font-medium text-foreground">Net Worth at Year {timeframe}:</span>
+              <span className="font-bold text-info tabular-nums">{formatCurrency(breakdown.rentFinalNetWorth)}</span>
             </div>
           </div>
         </div>
 
         {/* Buy Scenario */}
-        <div className="border border-green-200 rounded-lg overflow-hidden">
-          <div className="bg-green-100 px-4 py-2">
-            <h4 className="font-semibold text-green-800">Buy Scenario ({buyScenario.name})</h4>
+        <div className="border border-success/30 rounded-xl overflow-hidden">
+          <div className="bg-success/10 px-4 py-3">
+            <h4 className="font-semibold text-success">Buy Scenario ({buyScenario.name})</h4>
           </div>
           <div className="p-4 space-y-3">
             <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Down Payment:</span>
-              <span className="font-medium text-red-600">-{formatCurrency(breakdown.downPayment)}</span>
+              <span className="text-muted-foreground">Down Payment:</span>
+              <span className="font-medium text-destructive tabular-nums">-{formatCurrency(breakdown.downPayment)}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Closing Costs:</span>
-              <span className="font-medium text-red-600">-{formatCurrency(breakdown.closingCosts)}</span>
+              <span className="text-muted-foreground">Closing Costs:</span>
+              <span className="font-medium text-destructive tabular-nums">-{formatCurrency(breakdown.closingCosts)}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Starting Portfolio:</span>
-              <span className="font-medium">{formatCurrency(breakdown.buyStartingPortfolio)}</span>
+              <span className="text-muted-foreground">Starting Portfolio:</span>
+              <span className="font-medium tabular-nums">{formatCurrency(breakdown.buyStartingPortfolio)}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Monthly Housing Cost:</span>
-              <span className="font-medium">{formatCurrency(breakdown.buyMonthlyHousing)}</span>
+              <span className="text-muted-foreground">Monthly Housing Cost:</span>
+              <span className="font-medium tabular-nums">{formatCurrency(breakdown.buyMonthlyHousing)}</span>
             </div>
             {breakdown.buyMonthlyLifeEvents > 0 && (
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Life Event Costs:</span>
-                <span className="font-medium text-red-600">-{formatCurrency(breakdown.buyMonthlyLifeEvents)}</span>
+                <span className="text-muted-foreground">Life Event Costs:</span>
+                <span className="font-medium text-destructive tabular-nums">-{formatCurrency(breakdown.buyMonthlyLifeEvents)}</span>
               </div>
             )}
             <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Monthly Investment:</span>
-              <span className="font-medium text-green-600">+{formatCurrency(breakdown.buyMonthlySavings)}</span>
+              <span className="text-muted-foreground">Monthly Investment:</span>
+              <span className="font-medium text-success tabular-nums">+{formatCurrency(breakdown.buyMonthlySavings)}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Home Appreciation:</span>
+              <span className="text-muted-foreground">Home Appreciation:</span>
               <span className="font-medium">{buyScenario.annualAppreciation}% annually</span>
             </div>
-            <div className="pt-2 border-t border-gray-200 flex justify-between">
-              <span className="font-medium text-gray-700">Net Worth at Year {timeframe}:</span>
-              <span className="font-bold text-green-600">{formatCurrency(breakdown.buyFinalNetWorth)}</span>
+            <div className="pt-3 border-t border-border flex justify-between">
+              <span className="font-medium text-foreground">Net Worth at Year {timeframe}:</span>
+              <span className="font-bold text-success tabular-nums">{formatCurrency(breakdown.buyFinalNetWorth)}</span>
             </div>
           </div>
         </div>
@@ -251,49 +256,49 @@ export function MathBreakdown() {
 
       {/* Year-by-Year Progression */}
       {isExpanded && (
-        <div>
-          <h4 className="font-semibold text-gray-700 mb-3">Year-by-Year Progression</h4>
-          <div className="overflow-x-auto">
+        <div className="animate-fade-in">
+          <h4 className="font-semibold text-foreground mb-4">Year-by-Year Progression</h4>
+          <div className="overflow-x-auto rounded-lg border border-border">
             <table className="min-w-full text-sm">
               <thead>
-                <tr className="bg-gray-50">
-                  <th className="px-3 py-2 text-left font-medium text-gray-600">Year</th>
-                  <th className="px-3 py-2 text-right font-medium text-blue-600">Rent Portfolio</th>
-                  <th className="px-3 py-2 text-right font-medium text-blue-600">Rent Net Worth</th>
-                  <th className="px-3 py-2 text-right font-medium text-green-600">Buy Portfolio</th>
-                  <th className="px-3 py-2 text-right font-medium text-green-600">Home Value</th>
-                  <th className="px-3 py-2 text-right font-medium text-green-600">Home Equity</th>
-                  <th className="px-3 py-2 text-right font-medium text-green-600">Buy Net Worth</th>
-                  <th className="px-3 py-2 text-right font-medium text-gray-600">Difference</th>
+                <tr className="bg-secondary">
+                  <th className="px-3 py-3 text-left font-medium text-muted-foreground">Year</th>
+                  <th className="px-3 py-3 text-right font-medium text-info">Rent Portfolio</th>
+                  <th className="px-3 py-3 text-right font-medium text-info">Rent Net Worth</th>
+                  <th className="px-3 py-3 text-right font-medium text-success">Buy Portfolio</th>
+                  <th className="px-3 py-3 text-right font-medium text-success">Home Value</th>
+                  <th className="px-3 py-3 text-right font-medium text-success">Home Equity</th>
+                  <th className="px-3 py-3 text-right font-medium text-success">Buy Net Worth</th>
+                  <th className="px-3 py-3 text-right font-medium text-muted-foreground">Difference</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-border">
                 {breakdown.yearlyData.map((row) => (
-                  <tr key={row.year} className={row.year === 0 ? 'bg-yellow-50' : ''}>
-                    <td className="px-3 py-2 font-medium">
+                  <tr key={row.year} className={row.year === 0 ? 'bg-accent/10' : 'hover:bg-secondary/50'}>
+                    <td className="px-3 py-2.5 font-medium">
                       {row.year === 0 ? 'Start' : `Year ${row.year}`}
                     </td>
-                    <td className="px-3 py-2 text-right text-blue-700">
+                    <td className="px-3 py-2.5 text-right text-info tabular-nums">
                       {formatCurrency(row.rentPortfolio)}
                     </td>
-                    <td className="px-3 py-2 text-right font-medium text-blue-700">
+                    <td className="px-3 py-2.5 text-right font-medium text-info tabular-nums">
                       {formatCurrency(row.rentNetWorth)}
                     </td>
-                    <td className="px-3 py-2 text-right text-green-700">
+                    <td className="px-3 py-2.5 text-right text-success tabular-nums">
                       {formatCurrency(row.buyPortfolio)}
                     </td>
-                    <td className="px-3 py-2 text-right text-green-700">
+                    <td className="px-3 py-2.5 text-right text-success tabular-nums">
                       {formatCurrency(row.buyHomeValue)}
                     </td>
-                    <td className="px-3 py-2 text-right text-green-700">
+                    <td className="px-3 py-2.5 text-right text-success tabular-nums">
                       {formatCurrency(row.buyHomeEquity)}
                     </td>
-                    <td className="px-3 py-2 text-right font-medium text-green-700">
+                    <td className="px-3 py-2.5 text-right font-medium text-success tabular-nums">
                       {formatCurrency(row.buyNetWorth)}
                     </td>
-                    <td className={`px-3 py-2 text-right font-medium ${row.difference > 0 ? 'text-blue-600' : 'text-green-600'}`}>
+                    <td className={`px-3 py-2.5 text-right font-medium tabular-nums ${row.difference > 0 ? 'text-info' : 'text-success'}`}>
                       {row.difference > 0 ? '+' : ''}{formatCurrency(row.difference)}
-                      <span className="text-xs text-gray-500 ml-1">
+                      <span className="text-xs text-muted-foreground ml-1">
                         ({row.difference > 0 ? 'Rent' : 'Buy'})
                       </span>
                     </td>
@@ -305,67 +310,67 @@ export function MathBreakdown() {
 
           {/* Cost Breakdown */}
           <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <h5 className="font-medium text-gray-700 mb-3">Monthly Housing Cost Breakdown (Buy)</h5>
-              <div className="space-y-2 text-sm">
+            <div className="p-5 bg-secondary rounded-xl">
+              <h5 className="font-medium text-foreground mb-4">Monthly Housing Cost Breakdown (Buy)</h5>
+              <div className="space-y-2.5 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Mortgage Payment:</span>
-                  <span>{formatCurrency(breakdown.monthlyMortgage)}</span>
+                  <span className="text-muted-foreground">Mortgage Payment:</span>
+                  <span className="tabular-nums">{formatCurrency(breakdown.monthlyMortgage)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Property Tax:</span>
-                  <span>{formatCurrency(buyScenario.monthlyPropertyTax)}</span>
+                  <span className="text-muted-foreground">Property Tax:</span>
+                  <span className="tabular-nums">{formatCurrency(buyScenario.monthlyPropertyTax)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Home Insurance:</span>
-                  <span>{formatCurrency(buyScenario.monthlyHomeInsurance)}</span>
+                  <span className="text-muted-foreground">Home Insurance:</span>
+                  <span className="tabular-nums">{formatCurrency(buyScenario.monthlyHomeInsurance)}</span>
                 </div>
                 {buyScenario.monthlyStrataFees > 0 && (
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Strata/HOA:</span>
-                    <span>{formatCurrency(buyScenario.monthlyStrataFees)}</span>
+                    <span className="text-muted-foreground">Strata/HOA:</span>
+                    <span className="tabular-nums">{formatCurrency(buyScenario.monthlyStrataFees)}</span>
                   </div>
                 )}
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Utilities:</span>
-                  <span>{formatCurrency(buyScenario.monthlyUtilities)}</span>
+                  <span className="text-muted-foreground">Utilities:</span>
+                  <span className="tabular-nums">{formatCurrency(buyScenario.monthlyUtilities)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Maintenance:</span>
-                  <span>{formatCurrency(buyScenario.monthlyMaintenance)}</span>
+                  <span className="text-muted-foreground">Maintenance:</span>
+                  <span className="tabular-nums">{formatCurrency(buyScenario.monthlyMaintenance)}</span>
                 </div>
-                <div className="flex justify-between pt-2 border-t border-gray-300 font-medium">
+                <div className="flex justify-between pt-3 border-t border-border font-medium">
                   <span>Total:</span>
-                  <span>{formatCurrency(breakdown.buyMonthlyHousing)}</span>
+                  <span className="tabular-nums">{formatCurrency(breakdown.buyMonthlyHousing)}</span>
                 </div>
               </div>
             </div>
 
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <h5 className="font-medium text-gray-700 mb-3">Key Assumptions</h5>
-              <div className="space-y-2 text-sm">
+            <div className="p-5 bg-secondary rounded-xl">
+              <h5 className="font-medium text-foreground mb-4">Key Assumptions</h5>
+              <div className="space-y-2.5 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Investment Return:</span>
+                  <span className="text-muted-foreground">Investment Return:</span>
                   <span>{financialProfile.expectedInvestmentReturn}% annually</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Home Appreciation:</span>
+                  <span className="text-muted-foreground">Home Appreciation:</span>
                   <span>{buyScenario.annualAppreciation}% annually</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Rent Increase:</span>
+                  <span className="text-muted-foreground">Rent Increase:</span>
                   <span>{rentScenario.annualRentIncrease}% annually</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Income Growth:</span>
+                  <span className="text-muted-foreground">Income Growth:</span>
                   <span>{financialProfile.annualRaisePercent}% annually</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Savings Rate:</span>
+                  <span className="text-muted-foreground">Savings Rate:</span>
                   <span>{financialProfile.savingsRate}% of discretionary</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Mortgage Rate:</span>
+                  <span className="text-muted-foreground">Mortgage Rate:</span>
                   <span>{buyScenario.interestRate}% ({buyScenario.amortizationYears} years)</span>
                 </div>
               </div>

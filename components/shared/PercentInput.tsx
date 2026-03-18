@@ -84,14 +84,14 @@ export function PercentInput({
   };
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-1.5">
       <label
         htmlFor={id}
-        className="block text-sm font-medium text-gray-700"
+        className="block text-sm font-medium text-stone-700"
       >
         {label}
       </label>
-      <div className="relative rounded-md shadow-sm">
+      <div className="relative">
         <input
           ref={inputRef}
           type="text"
@@ -103,21 +103,22 @@ export function PercentInput({
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
           disabled={disabled}
-          className={`block w-full rounded-md border-0 py-2 pl-3 pr-8 text-gray-900 ring-1 ring-inset
-            ${error ? 'ring-red-300 focus:ring-red-500' : 'ring-gray-300 focus:ring-blue-500'}
-            placeholder:text-gray-400 focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6
-            disabled:bg-gray-50 disabled:text-gray-500`}
+          className={`block w-full rounded-lg border-0 py-2.5 pl-3 pr-8 text-foreground ring-1 ring-inset
+            ${error ? 'ring-destructive focus:ring-destructive' : 'ring-border focus:ring-accent'}
+            placeholder:text-muted-foreground focus:ring-2 focus:ring-inset text-sm
+            disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed
+            transition-shadow duration-200`}
           placeholder="0"
         />
         <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-          <span className="text-gray-500 sm:text-sm">%</span>
+          <span className="text-muted-foreground text-sm">%</span>
         </div>
       </div>
       {helpText && !error && (
-        <p className="text-xs text-gray-500">{helpText}</p>
+        <p className="text-xs text-muted-foreground">{helpText}</p>
       )}
       {error && (
-        <p className="text-xs text-red-600">{error}</p>
+        <p className="text-xs text-destructive">{error}</p>
       )}
     </div>
   );
