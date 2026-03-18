@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDownIcon, ChevronUpIcon } from '@/components/shared';
 import { useStore } from '@/lib/store';
 import { formatCurrency } from '@/lib/utils/formatters';
 import { calculateMonthlyMortgagePayment } from '@/lib/engine/mortgage';
@@ -125,9 +125,9 @@ export function MathBreakdown() {
           className="inline-flex items-center gap-1 text-sm text-accent hover:text-amber-700 font-medium transition-colors"
         >
           {isExpanded ? (
-            <>Show Less <ChevronUp className="w-4 h-4" /></>
+            <>Show Less <ChevronUpIcon className="w-4 h-4" /></>
           ) : (
-            <>Show More <ChevronDown className="w-4 h-4" /></>
+            <>Show More <ChevronDownIcon className="w-4 h-4" /></>
           )}
         </button>
       </div>

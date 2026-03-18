@@ -1,6 +1,7 @@
 'use client';
 
 import { useWizard, STEP_CONFIG, WizardStep } from './WizardProvider';
+import { CheckIcon } from '@/components/shared';
 
 const INPUT_STEPS: WizardStep[] = ['welcome', 'financial', 'rent', 'buy', 'review'];
 
@@ -57,7 +58,7 @@ export function StepIndicator() {
                   }
                 `}>
                   {isCompleted ? (
-                    <CheckIcon className="w-3.5 h-3.5" />
+                    <CheckIcon className="w-3.5 h-3.5" strokeWidth={3} />
                   ) : (
                     index + 1
                   )}
@@ -101,13 +102,5 @@ export function StepIndicator() {
         </div>
       </div>
     </nav>
-  );
-}
-
-function CheckIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-    </svg>
   );
 }

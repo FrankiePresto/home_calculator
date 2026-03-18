@@ -3,6 +3,7 @@
 import { ReactNode } from 'react';
 import { WizardProvider, useWizard, STEP_CONFIG } from './WizardProvider';
 import { StepIndicator } from './StepIndicator';
+import { HomeIconSimple } from '@/components/shared';
 import { WizardNavigation } from './WizardNavigation';
 import { useStore } from '@/lib/store';
 
@@ -29,7 +30,7 @@ function WizardLayoutInner({ children }: WizardLayoutProps) {
               className="flex items-center gap-3 hover:opacity-80 transition-opacity"
             >
               <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center">
-                <HomeIcon className="w-5 h-5 text-accent-foreground" />
+                <HomeIconSimple className="w-5 h-5 text-accent-foreground" />
               </div>
               <div className="hidden sm:block">
                 <h1 className="text-lg font-semibold text-foreground tracking-tight">
@@ -123,13 +124,5 @@ export function WizardLayout({ children }: WizardLayoutProps) {
     <WizardProvider>
       <WizardLayoutInner>{children}</WizardLayoutInner>
     </WizardProvider>
-  );
-}
-
-function HomeIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-    </svg>
   );
 }
