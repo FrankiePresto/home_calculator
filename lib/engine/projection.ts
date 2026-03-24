@@ -23,6 +23,8 @@ import {
 import {
   calculateMonthlyMortgagePayment,
   amortizeYear,
+  amortizeYearWithAcceleration,
+  buildLumpSumMap,
   calculateClosingCosts,
   calculateTotalLoan,
   getRateForYear,
@@ -416,6 +418,10 @@ export function projectBuyScenario(
     createYear0Snapshot(profile, portfolio, homeValue, mortgageBalance, nonInvestedSavings)
   );
 
+  // Pre-compute lump sum map if acceleration is configured
+  const accel = scenario.acceleration;
+  const lumpSumMap = accel ? buildLumpSumMap(accel, scenario.amortizationYears) : null;
+
   // Project Year 1 through Year N
   for (let year = 1; year <= timeframeYears; year++) {
     // 1. Apply income growth (except Year 1)
@@ -444,18 +450,58 @@ export function projectBuyScenario(
       year
     );
     const remainingYears = getRemainingAmortization(scenario.amortizationYears, year);
-    const monthlyPayment = calculateMonthlyMortgagePayment(
-      mortgageBalance,
-      rate,
-      remainingYears
-    );
 
-    // Get interest/principal breakdown for the year
-    const amortization = amortizeYear(mortgageBalance, rate, monthlyPayment);
+    let amortInterest: number;
+    let amortPrincipal: number;
+    let amortEndingBalance: number;
+    let extraMonthly = 0;
+    let lumpSumApplied = 0;
 
-    // 4. Calculate monthly housing cost
+    if (mortgageBalance > 0) {
+      const monthlyPayment = calculateMonthlyMortgagePayment(
+        mortgageBalance,
+        rate,
+        remainingYears
+      );
+
+      if (accel && lumpSumMap && (accel.extraMonthlyPayment > 0 || lumpSumMap.size > 0)) {
+        // Accelerated path
+        extraMonthly = accel.extraMonthlyPayment;
+        const yearLumpSum = lumpSumMap.get(year) || 0;
+        const result = amortizeYearWithAcceleration(
+          mortgageBalance,
+          rate,
+          monthlyPayment,
+          extraMonthly,
+          yearLumpSum
+        );
+        amortInterest = result.totalInterest;
+        amortPrincipal = result.totalPrincipal;
+        amortEndingBalance = result.endingBalance;
+        lumpSumApplied = result.lumpSumApplied;
+      } else {
+        // Standard path
+        const amortization = amortizeYear(mortgageBalance, rate, monthlyPayment);
+        amortInterest = amortization.totalInterest;
+        amortPrincipal = amortization.totalPrincipal;
+        amortEndingBalance = amortization.endingBalance;
+      }
+    } else {
+      // Mortgage already paid off
+      amortInterest = 0;
+      amortPrincipal = 0;
+      amortEndingBalance = 0;
+    }
+
+    // 4b. Calculate effective monthly mortgage cost (base payment + extra monthly)
+    // When mortgage is paid off, both are 0
+    const effectiveMonthlyMortgage = mortgageBalance > 0
+      ? (amortInterest + amortPrincipal - lumpSumApplied) / 12
+      : 0;
+
+    // 4c. Calculate monthly housing cost
     const monthlyHousingCost =
-      monthlyPayment +
+      effectiveMonthlyMortgage +
       scenario.monthlyPropertyTax +
       scenario.monthlyHomeInsurance +
       scenario.monthlyStrataFees +
@@ -508,18 +554,30 @@ export function projectBuyScenario(
       }
     }
 
+    // 9b. Deduct lump sum from portfolio (extra monthly is already in housing cost)
+    if (lumpSumApplied > 0) {
+      const fromPortfolio = Math.min(portfolio, lumpSumApplied);
+      portfolio = Math.max(0, portfolio - fromPortfolio);
+      const remaining = lumpSumApplied - fromPortfolio;
+      if (remaining > 0) {
+        nonInvestedSavings = Math.max(0, nonInvestedSavings - remaining);
+      }
+    }
+
     // 10. Update home value (appreciation) and mortgage balance
     homeValue *= 1 + scenario.annualAppreciation / 100;
-    mortgageBalance = Math.max(0, mortgageBalance - amortization.totalPrincipal);
+    mortgageBalance = amortEndingBalance;
 
     const homeEquity = homeValue - mortgageBalance;
 
     // 11. Build cash flow breakdown (use net income for accurate reporting)
+    // toMortgagePrincipal includes all principal (base + extra + lump sum)
+    // since it all builds equity (wealth building)
     const cashFlow: CashFlowBreakdown = {
       income: netAnnualIncome,
       toRent: 0,
-      toMortgageInterest: amortization.totalInterest,
-      toMortgagePrincipal: amortization.totalPrincipal,
+      toMortgageInterest: amortInterest,
+      toMortgagePrincipal: amortPrincipal,
       toPropertyTax: scenario.monthlyPropertyTax * 12,
       toInsurance: scenario.monthlyHomeInsurance * 12,
       toMaintenance: scenario.monthlyMaintenance * 12,

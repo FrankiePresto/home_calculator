@@ -40,6 +40,24 @@ export interface RentScenario {
 }
 
 // =============================================================================
+// Mortgage Acceleration
+// =============================================================================
+
+export interface PeriodicPayment {
+  id: string;
+  year: number;
+  amount: number;
+}
+
+export interface MortgageAcceleration {
+  extraMonthlyPayment: number;
+  annualLumpSum: number;
+  annualLumpSumStartYear: number;
+  annualLumpSumEndYear?: number;
+  periodicPayments: PeriodicPayment[];
+}
+
+// =============================================================================
 // Buy Scenario
 // =============================================================================
 
@@ -73,6 +91,9 @@ export interface BuyScenario {
 
   // Appreciation
   annualAppreciation: number;         // % (default: 3%)
+
+  // Mortgage Acceleration (optional)
+  acceleration?: MortgageAcceleration;
 }
 
 // =============================================================================

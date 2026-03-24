@@ -1,11 +1,28 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
+} from 'recharts';
 import { useStore } from '@/lib/store';
-import { formatCurrency } from '@/lib/utils/formatters';
+import { formatCurrency, formatCurrencyCompact } from '@/lib/utils/formatters';
 import { categorizeAnnualCashFlow } from '@/lib/engine/cashflow';
 
 type ScenarioType = 'rent' | 'buy';
+
+const COLORS = {
+  sunk: '#e11d48',       // destructive (rose-600)
+  wealth: '#059669',     // success (emerald-600)
+  unallocated: '#d97706', // accent (amber-600)
+  grid: '#e7e5e4',
+  text: '#57534e',
+};
 
 export function CashFlowSankey() {
   const results = useStore((state) => state.results);
@@ -27,15 +44,33 @@ export function CashFlowSankey() {
     return categorizeAnnualCashFlow(snapshot, selectedScenario === 'rent');
   }, [results, selectedYear, selectedScenario, timeframe]);
 
+  // Build per-year bar chart data
+  const barChartData = useMemo(() => {
+    if (!results.rentProjection || !results.buyProjection) return [];
+
+    const projection = selectedScenario === 'rent' ? results.rentProjection : results.buyProjection;
+    return projection.snapshots.slice(1).map((snap, idx) => {
+      const cf = categorizeAnnualCashFlow(snap, selectedScenario === 'rent');
+      return {
+        year: `Yr ${idx + 1}`,
+        sunk: Math.round(cf.totalSunk),
+        wealth: Math.round(cf.totalWealth),
+        unallocated: Math.max(0, Math.round(cf.grossIncome - cf.totalSunk - cf.totalWealth)),
+      };
+    });
+  }, [results, selectedScenario, timeframe]);
+
   if (!cashFlowData) return null;
 
   const totalIncome = cashFlowData.grossIncome;
   const sunkPercent = (cashFlowData.totalSunk / totalIncome) * 100;
   const wealthPercent = (cashFlowData.totalWealth / totalIncome) * 100;
+  const unallocatedAmount = Math.max(0, totalIncome - cashFlowData.totalSunk - cashFlowData.totalWealth);
+  const unallocatedPercent = (unallocatedAmount / totalIncome) * 100;
 
   // Build categorized items
-  const sunkItems = [];
-  const wealthItems = [];
+  const sunkItems: { label: string; value: number }[] = [];
+  const wealthItems: { label: string; value: number }[] = [];
 
   if (selectedScenario === 'rent') {
     if (cashFlowData.sunkCosts.rent > 0) sunkItems.push({ label: 'Rent', value: cashFlowData.sunkCosts.rent });
@@ -53,6 +88,21 @@ export function CashFlowSankey() {
   if (cashFlowData.sunkCosts.otherExpenses > 0) sunkItems.push({ label: 'Living Expenses', value: cashFlowData.sunkCosts.otherExpenses });
   if (cashFlowData.sunkCosts.lifeEventExpenses > 0) sunkItems.push({ label: 'Life Events', value: cashFlowData.sunkCosts.lifeEventExpenses });
   if (cashFlowData.wealthBuilding.investments > 0) wealthItems.push({ label: 'Investments', value: cashFlowData.wealthBuilding.investments });
+
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (!active || !payload || !payload.length) return null;
+    return (
+      <div className="bg-card p-3 shadow-lg rounded-xl border border-border text-sm">
+        <p className="font-semibold text-foreground mb-1.5">{label}</p>
+        {payload.map((entry: any, idx: number) => (
+          <div key={idx} className="flex justify-between gap-4">
+            <span style={{ color: entry.color }}>{entry.name}</span>
+            <span className="font-medium tabular-nums">{formatCurrency(entry.value)}</span>
+          </div>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <div className="card p-6">
@@ -105,23 +155,52 @@ export function CashFlowSankey() {
           <p className="text-lg font-semibold text-success tabular-nums">{formatCurrency(cashFlowData.totalWealth)}</p>
         </div>
         <div>
-          <p className="text-xs text-muted-foreground mb-1">Efficiency</p>
-          <p className="text-lg font-semibold tabular-nums">{wealthPercent.toFixed(0)}%</p>
+          <p className="text-xs text-muted-foreground mb-1">Unallocated</p>
+          <p className="text-lg font-semibold text-accent tabular-nums">{formatCurrency(unallocatedAmount)}</p>
         </div>
       </div>
 
       {/* Allocation bar */}
       <div className="mb-6">
         <div className="h-3 flex rounded-full overflow-hidden">
-          <div className="bg-destructive" style={{ width: `${sunkPercent}%` }} title={`Sunk: ${sunkPercent.toFixed(0)}%`} />
-          <div className="bg-success" style={{ width: `${wealthPercent}%` }} title={`Wealth: ${wealthPercent.toFixed(0)}%`} />
-          <div className="bg-muted flex-1" />
+          <div className="bg-destructive transition-all" style={{ width: `${sunkPercent}%` }} title={`Sunk: ${sunkPercent.toFixed(0)}%`} />
+          <div className="bg-success transition-all" style={{ width: `${wealthPercent}%` }} title={`Wealth: ${wealthPercent.toFixed(0)}%`} />
+          <div className="bg-accent transition-all" style={{ width: `${unallocatedPercent}%` }} title={`Unallocated: ${unallocatedPercent.toFixed(0)}%`} />
         </div>
         <div className="flex justify-between mt-2 text-xs text-muted-foreground">
-          <span>Sunk: {sunkPercent.toFixed(0)}%</span>
-          <span>Wealth: {wealthPercent.toFixed(0)}%</span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-destructive inline-block"></span>
+            Sunk {sunkPercent.toFixed(0)}%
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-success inline-block"></span>
+            Wealth {wealthPercent.toFixed(0)}%
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-accent inline-block"></span>
+            Unallocated {unallocatedPercent.toFixed(0)}%
+          </span>
         </div>
       </div>
+
+      {/* Annual cash flow chart */}
+      {barChartData.length > 1 && (
+        <div className="mb-6">
+          <h4 className="text-sm font-medium text-muted-foreground mb-3">Annual Cash Flow Over Time</h4>
+          <div className="h-48">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={barChartData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
+                <XAxis dataKey="year" tick={{ fontSize: 11, fill: COLORS.text }} interval={Math.max(0, Math.floor(barChartData.length / 8) - 1)} />
+                <YAxis tick={{ fontSize: 11, fill: COLORS.text }} tickFormatter={(v) => formatCurrencyCompact(v)} width={55} />
+                <Tooltip content={<CustomTooltip />} />
+                <Bar dataKey="sunk" name="Sunk Costs" stackId="stack" fill={COLORS.sunk} radius={[0, 0, 0, 0]} />
+                <Bar dataKey="wealth" name="Wealth Building" stackId="stack" fill={COLORS.wealth} radius={[0, 0, 0, 0]} />
+                <Bar dataKey="unallocated" name="Unallocated" stackId="stack" fill={COLORS.unallocated} radius={[2, 2, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
 
       {/* Two-column breakdown */}
       <div className="grid grid-cols-2 gap-6">

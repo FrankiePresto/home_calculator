@@ -33,9 +33,12 @@ export function PercentInput({
   const [isFocused, setIsFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Format number with fixed decimals
+  // Format number preserving the user's original precision
+  // e.g. 3.95 stays "3.95", 4 stays "4", 3.5 stays "3.5"
   const formatValue = (num: number): string => {
-    return num.toFixed(decimals);
+    // Use parseFloat(toFixed(10)) to clean up floating point artifacts
+    // then toString() to get natural precision (no trailing zeros)
+    return parseFloat(num.toFixed(10)).toString();
   };
 
   // Parse string to number
@@ -73,11 +76,11 @@ export function PercentInput({
     if (e.key === 'ArrowUp') {
       e.preventDefault();
       const newValue = Math.min(value + step, max);
-      onChange(Math.round(newValue * 10) / 10);
+      onChange(parseFloat(newValue.toFixed(10)));
     } else if (e.key === 'ArrowDown') {
       e.preventDefault();
       const newValue = Math.max(value - step, min);
-      onChange(Math.round(newValue * 10) / 10);
+      onChange(parseFloat(newValue.toFixed(10)));
     } else if (e.key === 'Enter') {
       inputRef.current?.blur();
     }

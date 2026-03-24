@@ -81,7 +81,7 @@ export function ResultsDashboard() {
       <HeroInsight />
 
       {/* Tabs - Prominent navigation for different analysis views */}
-      <div className="card p-2">
+      <div className="sticky top-0 z-10 card p-2 backdrop-blur-sm bg-card/95 shadow-sm">
         <nav className="flex gap-2" aria-label="Results tabs">
           {TABS.map((tab) => (
             <button
@@ -114,6 +114,14 @@ export function ResultsDashboard() {
           <div className="space-y-6">
             <CashFlowSankey />
             <SunkCostComparison />
+            <div className="text-center py-3">
+              <button
+                onClick={() => setActiveTab('overview')}
+                className="text-sm text-accent hover:text-accent/80 font-medium"
+              >
+                Tip: Adjust extra mortgage payments in the Overview tab to see how they affect your cash flow
+              </button>
+            </div>
           </div>
         )}
 
