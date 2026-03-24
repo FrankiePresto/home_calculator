@@ -27,17 +27,17 @@ export function HeroInsight() {
   const getBottomLine = () => {
     if (winner === 'rent') {
       if (breakeven?.timeBreakeven && breakeven.secondCrossover) {
-        return `Buying temporarily overtakes renting after ${formatYears(breakeven.timeBreakeven.exact, false)}, but renting catches back up around ${formatYears(breakeven.secondCrossover.exact, false)}. Over ${timeframe} years, renting wins by ${formatCurrency(difference)}.`;
+        return `Buying temporarily pulls ahead after ${formatYears(breakeven.timeBreakeven.exact, false)}, but renting regains the lead around ${formatYears(breakeven.secondCrossover.exact, false)}. Over ${timeframe} years, renting results in ${formatCurrency(difference)} more net worth.`;
       }
       if (breakeven?.timeBreakeven) {
-        return `If you plan to stay less than ${formatYears(breakeven.timeBreakeven.exact, false)}, renting is better. After that, buying ${buyScenario.name} wins.`;
+        return `If you plan to stay less than ${formatYears(breakeven.timeBreakeven.exact, false)}, renting leads to a higher net worth. Beyond that, buying ${buyScenario.name} becomes the stronger option.`;
       }
-      return `Renting beats buying ${buyScenario.name} over the entire ${timeframe}-year period. Consider a less expensive property or higher down payment.`;
+      return `Renting leads to a higher net worth than buying ${buyScenario.name} over the entire ${timeframe}-year period. Consider a less expensive property or higher down payment.`;
     } else {
       if (breakeven?.timeBreakeven && breakeven.timeBreakeven.exact > 0) {
-        return `After ${formatYears(breakeven.timeBreakeven.exact, false)}, buying ${buyScenario.name} becomes better than renting. You'll be ${formatCurrency(difference)} ahead after ${timeframe} years.`;
+        return `After ${formatYears(breakeven.timeBreakeven.exact, false)}, buying ${buyScenario.name} leads to a higher net worth than renting. You'll be ${formatCurrency(difference)} ahead after ${timeframe} years.`;
       }
-      return `Buying ${buyScenario.name} is better than renting from day one. You'll be ${formatCurrency(difference)} ahead after ${timeframe} years.`;
+      return `Buying ${buyScenario.name} leads to a higher net worth than renting from day one. You'll be ${formatCurrency(difference)} ahead after ${timeframe} years.`;
     }
   };
 
@@ -47,7 +47,7 @@ export function HeroInsight() {
         {/* Left side - Winner announcement */}
         <div className="flex-1">
           <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-2">
-            Winner at {timeframe} Years
+            {timeframe}-Year Outlook
           </p>
           <div className="flex items-center gap-4">
             <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${winner === 'rent' ? 'bg-info/10' : 'bg-success/10'}`}>
@@ -58,11 +58,13 @@ export function HeroInsight() {
               )}
             </div>
             <div>
-              <h2 className={`text-4xl font-bold ${textClass}`}>
-                {winner === 'rent' ? 'Renting' : 'Buying'}
+              <h2 className={`text-2xl md:text-3xl font-bold ${textClass}`}>
+                {winner === 'rent'
+                  ? <>Renting leads to a higher net worth vs buying {buyScenario.name}</>
+                  : <>Buying {buyScenario.name} leads to a higher net worth vs renting</>}
               </h2>
               <p className="text-muted-foreground mt-1">
-                by <span className="font-semibold text-foreground">{formatCurrency(difference)}</span>
+                by <span className="font-semibold text-foreground">{formatCurrency(difference)}</span> over {timeframe} years
               </p>
             </div>
           </div>

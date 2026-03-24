@@ -167,7 +167,7 @@ export function SunkCostComparison() {
         <div className="h-56 mb-6">
           <ResponsiveContainer width="100%" height="100%">
             {viewMode === 'annual' ? (
-              <BarChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
+              <BarChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }} onClick={(e) => { if (e?.activeLabel) setSelectedYear(parseInt(e.activeLabel.replace('Yr ', ''))); }} style={{ cursor: 'pointer' }}>
                 <XAxis dataKey="year" tick={{ fontSize: 11, fill: COLORS.text }} interval={Math.max(0, Math.floor(chartData.length / 8) - 1)} />
                 <YAxis tick={{ fontSize: 11, fill: COLORS.text }} tickFormatter={(v) => formatCurrencyCompact(v)} width={55} />
                 <Tooltip content={<CustomTooltip />} />
@@ -184,7 +184,7 @@ export function SunkCostComparison() {
                 </Bar>
               </BarChart>
             ) : (
-              <LineChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
+              <LineChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }} onClick={(e) => { if (e?.activeLabel) setSelectedYear(parseInt(e.activeLabel.replace('Yr ', ''))); }} style={{ cursor: 'pointer' }}>
                 <XAxis dataKey="year" tick={{ fontSize: 11, fill: COLORS.text }} interval={Math.max(0, Math.floor(chartData.length / 8) - 1)} />
                 <YAxis tick={{ fontSize: 11, fill: COLORS.text }} tickFormatter={(v) => formatCurrencyCompact(v)} width={55} />
                 <Tooltip content={<CustomTooltip />} />

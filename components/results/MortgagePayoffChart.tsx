@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useStore } from '@/lib/store';
 import { simulateMortgageWithExtraPayments, calculateTotalLoan, buildLumpSumMap } from '@/lib/engine/mortgage';
 import { MortgageAcceleration, PeriodicPayment } from '@/lib/engine/types';
@@ -27,25 +27,48 @@ const DEFAULT_ACCELERATION: MortgageAcceleration = {
 
 export function MortgagePayoffChart() {
   const buyScenario = useStore((state) => state.buyScenario);
-  const setBuyScenario = useStore((state) => state.setBuyScenario);
+  const setAcceleration = useStore((state) => state.setAcceleration);
+  const calculate = useStore((state) => state.calculate);
   const amort = buyScenario.amortizationYears;
+  const sectionRef = useRef<HTMLDivElement>(null);
 
   const accel = buyScenario.acceleration ?? DEFAULT_ACCELERATION;
+  const recalcTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Convenience updater
+  // Debounced updater for continuous inputs (typing numbers).
+  // setAcceleration does NOT clear lastCalculated, so the page stays on results.
+  // calculate() is debounced so it only fires after the user stops typing.
   const updateAcceleration = useCallback(
     (updates: Partial<MortgageAcceleration>) => {
-      setBuyScenario({
-        acceleration: { ...accel, ...updates },
-      });
+      setAcceleration({ ...accel, ...updates });
+      if (recalcTimer.current) clearTimeout(recalcTimer.current);
+      recalcTimer.current = setTimeout(() => calculate(), 800);
     },
-    [accel, setBuyScenario]
+    [accel, setAcceleration, calculate]
   );
 
-  // --- Add-periodic-payment form state (local — only for the inline form) ---
+  // Immediate updater for discrete actions (add/remove periodic payment)
+  const updateAccelerationImmediate = useCallback(
+    (updates: Partial<MortgageAcceleration>) => {
+      setAcceleration({ ...accel, ...updates });
+      if (recalcTimer.current) clearTimeout(recalcTimer.current);
+      calculate();
+    },
+    [accel, setAcceleration, calculate]
+  );
+
+  // Clean up timer on unmount
+  useEffect(() => {
+    return () => { if (recalcTimer.current) clearTimeout(recalcTimer.current); };
+  }, []);
+
+  // --- Local draft state for text inputs (allows free typing, validates on blur) ---
   const [addingPayment, setAddingPayment] = useState(false);
-  const [draftYear, setDraftYear] = useState(1);
+  const [draftYear, setDraftYear] = useState('1');
   const [draftAmount, setDraftAmount] = useState('');
+  const [draftAnnualAmount, setDraftAnnualAmount] = useState(accel.annualLumpSum ? String(accel.annualLumpSum) : '');
+  const [draftStartYear, setDraftStartYear] = useState(String(accel.annualLumpSumStartYear));
+  const [draftEndYear, setDraftEndYear] = useState(accel.annualLumpSumEndYear != null ? String(accel.annualLumpSumEndYear) : '');
 
   // --- Derived ---
   const principal = useMemo(
@@ -103,19 +126,21 @@ export function MortgagePayoffChart() {
   const commitPeriodicPayment = () => {
     const amount = parseFloat(draftAmount.replace(/[^0-9.]/g, ''));
     if (!amount || amount <= 0) return;
-    updateAcceleration({
+    const yearNum = parseInt(draftYear);
+    if (!yearNum || yearNum < 1 || yearNum > amort) return;
+    updateAccelerationImmediate({
       periodicPayments: [
         ...accel.periodicPayments,
-        { id: Math.random().toString(36).slice(2, 9), year: draftYear, amount },
+        { id: Math.random().toString(36).slice(2, 9), year: yearNum, amount },
       ],
     });
     setAddingPayment(false);
     setDraftAmount('');
-    setDraftYear(Math.min(draftYear + 3, amort));
+    setDraftYear(String(Math.min(yearNum + 3, amort)));
   };
 
   const removePeriodicPayment = (id: string) =>
-    updateAcceleration({
+    updateAccelerationImmediate({
       periodicPayments: accel.periodicPayments.filter((p) => p.id !== id),
     });
 
@@ -126,7 +151,7 @@ export function MortgagePayoffChart() {
   };
 
   return (
-    <div className="card p-6">
+    <div ref={sectionRef} className="card p-6">
       {/* Header */}
       <div className="mb-5">
         <h3 className="section-header">Mortgage Acceleration</h3>
@@ -177,11 +202,18 @@ export function MortgagePayoffChart() {
                   $
                 </span>
                 <input
-                  type="number"
-                  min={0}
-                  step={500}
-                  value={accel.annualLumpSum || ''}
-                  onChange={(e) => updateAcceleration({ annualLumpSum: Math.max(0, parseFloat(e.target.value) || 0) })}
+                  type="text"
+                  inputMode="numeric"
+                  value={draftAnnualAmount}
+                  onChange={(e) => {
+                    const raw = e.target.value.replace(/[^0-9.]/g, '');
+                    setDraftAnnualAmount(raw);
+                    updateAcceleration({ annualLumpSum: Math.max(0, parseFloat(raw) || 0) });
+                  }}
+                  onBlur={() => {
+                    const val = Math.max(0, parseFloat(draftAnnualAmount) || 0);
+                    setDraftAnnualAmount(val ? String(val) : '');
+                  }}
                   placeholder="0"
                   className="input pl-7"
                 />
@@ -191,15 +223,23 @@ export function MortgagePayoffChart() {
             <div>
               <label className="block text-xs text-muted-foreground mb-1">From year</label>
               <input
-                type="number"
-                min={1}
-                max={amort}
-                value={accel.annualLumpSumStartYear}
-                onChange={(e) =>
-                  updateAcceleration({
-                    annualLumpSumStartYear: Math.max(1, Math.min(amort, parseInt(e.target.value) || 1)),
-                  })
-                }
+                type="text"
+                inputMode="numeric"
+                value={draftStartYear}
+                onChange={(e) => {
+                  const raw = e.target.value.replace(/[^0-9]/g, '');
+                  setDraftStartYear(raw);
+                  const v = parseInt(raw);
+                  if (v >= 1 && v <= amort) {
+                    updateAcceleration({ annualLumpSumStartYear: v });
+                  }
+                }}
+                onBlur={() => {
+                  const v = parseInt(draftStartYear);
+                  const clamped = Math.max(1, Math.min(amort, v || 1));
+                  setDraftStartYear(String(clamped));
+                  updateAcceleration({ annualLumpSumStartYear: clamped });
+                }}
                 className="input w-20"
               />
             </div>
@@ -210,18 +250,30 @@ export function MortgagePayoffChart() {
                 <span className="text-muted-foreground/60">(blank = end)</span>
               </label>
               <input
-                type="number"
-                min={accel.annualLumpSumStartYear}
-                max={amort}
-                value={accel.annualLumpSumEndYear ?? ''}
+                type="text"
+                inputMode="numeric"
+                value={draftEndYear}
                 onChange={(e) => {
-                  const v = parseInt(e.target.value);
-                  updateAcceleration({
-                    annualLumpSumEndYear:
-                      e.target.value === '' || isNaN(v)
-                        ? undefined
-                        : Math.min(amort, Math.max(accel.annualLumpSumStartYear, v)),
-                  });
+                  const raw = e.target.value.replace(/[^0-9]/g, '');
+                  setDraftEndYear(raw);
+                  if (raw === '') {
+                    updateAcceleration({ annualLumpSumEndYear: undefined });
+                  } else {
+                    const v = parseInt(raw);
+                    if (v >= 1 && v <= amort) {
+                      updateAcceleration({ annualLumpSumEndYear: v });
+                    }
+                  }
+                }}
+                onBlur={() => {
+                  if (draftEndYear === '') {
+                    updateAcceleration({ annualLumpSumEndYear: undefined });
+                  } else {
+                    const v = parseInt(draftEndYear);
+                    const clamped = Math.max(accel.annualLumpSumStartYear, Math.min(amort, v || amort));
+                    setDraftEndYear(String(clamped));
+                    updateAcceleration({ annualLumpSumEndYear: clamped });
+                  }
                 }}
                 placeholder={`${amort}`}
                 className="input w-24"
@@ -266,15 +318,12 @@ export function MortgagePayoffChart() {
           {addingPayment ? (
             <div className="flex flex-wrap gap-3 items-end bg-secondary border border-border rounded-lg p-3">
               <div>
-                <label className="block text-xs text-muted-foreground mb-1">Year</label>
+                <label className="block text-xs text-muted-foreground mb-1">Year (1–{amort})</label>
                 <input
-                  type="number"
-                  min={1}
-                  max={amort}
+                  type="text"
+                  inputMode="numeric"
                   value={draftYear}
-                  onChange={(e) =>
-                    setDraftYear(Math.max(1, Math.min(amort, parseInt(e.target.value) || 1)))
-                  }
+                  onChange={(e) => setDraftYear(e.target.value.replace(/[^0-9]/g, ''))}
                   className="input w-20"
                 />
               </div>
@@ -302,7 +351,7 @@ export function MortgagePayoffChart() {
               <div className="flex gap-2">
                 <button
                   onClick={commitPeriodicPayment}
-                  disabled={!draftAmount || parseFloat(draftAmount) <= 0}
+                  disabled={!draftAmount || parseFloat(draftAmount) <= 0 || !draftYear || parseInt(draftYear) < 1 || parseInt(draftYear) > amort}
                   className="btn-primary px-3 py-2 text-sm disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   Add
