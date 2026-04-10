@@ -65,9 +65,7 @@ export function WizardNavigation({ onCalculate }: WizardNavigationProps) {
             disabled={!canGoNext}
             className="btn-primary flex items-center gap-2"
           >
-            <span>
-              {currentStep === 'welcome' ? 'Get Started' : 'Continue'}
-            </span>
+            <span>Continue</span>
             <ArrowRightIcon className="w-4 h-4" />
           </button>
         )}
