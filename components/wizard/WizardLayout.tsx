@@ -109,9 +109,9 @@ function WizardLayoutInner({ children }: WizardLayoutProps) {
       {/* Footer */}
       <footer className="border-t border-border mt-auto">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <p className="text-sm text-muted-foreground text-center">
-            This calculator provides estimates for educational purposes only. 
-            Consult a financial advisor for personalized advice.
+          <p className="text-xs text-muted-foreground text-center leading-relaxed">
+            This calculator provides estimates based on simplified assumptions and is for educational purposes only.
+            Results are not guaranteed to be accurate. Consult a qualified financial advisor before making any financial decisions.
           </p>
         </div>
       </footer>

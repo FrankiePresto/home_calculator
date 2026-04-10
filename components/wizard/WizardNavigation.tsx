@@ -13,8 +13,8 @@ export function WizardNavigation({ onCalculate }: WizardNavigationProps) {
   const calculate = useStore((state) => state.calculate);
   const isCalculating = useStore((state) => state.isCalculating);
 
-  // Don't show navigation on results page
-  if (currentStep === 'results') {
+  // Don't show navigation on welcome or results page
+  if (currentStep === 'welcome' || currentStep === 'results') {
     return null;
   }
 

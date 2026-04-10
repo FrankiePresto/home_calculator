@@ -1,13 +1,19 @@
 'use client';
 
+import { useState } from 'react';
 import { useWizard } from '@/components/wizard';
 import { useStore } from '@/lib/store';
-import { HomeIcon, ChartIcon, BreakevenIcon, InsightIcon, CheckIcon } from '@/components/shared';
+import { HomeIcon, ChartIcon, BreakevenIcon, InsightIcon, CheckIcon, ArrowRightIcon } from '@/components/shared';
+
+const DISCLAIMER_TEXT =
+  'This calculator provides estimates based on simplified assumptions and is for educational purposes only. Results are not guaranteed to be accurate. Consult a qualified financial advisor before making any financial decisions.';
 
 export function WelcomeStep() {
+  const { nextStep } = useWizard();
   const { setStep } = useWizard();
   const savedScenarios = useStore((state) => state.savedScenarios);
   const loadScenario = useStore((state) => state.loadScenario);
+  const [acknowledged, setAcknowledged] = useState(false);
 
   return (
     <div className="text-center max-w-2xl mx-auto">
@@ -92,6 +98,36 @@ export function WelcomeStep() {
         <p className="mt-4 text-xs text-muted-foreground">
           Takes about 5 minutes. Your data stays in your browser.
         </p>
+      </div>
+
+      {/* Disclaimer acknowledgment */}
+      <div className="mt-8 p-5 bg-card border border-border rounded-xl text-left">
+        <p className="text-xs text-muted-foreground leading-relaxed mb-4">
+          {DISCLAIMER_TEXT}
+        </p>
+        <label className="flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={acknowledged}
+            onChange={(e) => setAcknowledged(e.target.checked)}
+            className="mt-0.5 h-4 w-4 rounded border-border text-accent focus:ring-accent"
+          />
+          <span className="text-sm text-foreground">
+            I understand that this tool is for educational purposes only and does not constitute financial advice
+          </span>
+        </label>
+      </div>
+
+      {/* Get Started button */}
+      <div className="mt-8">
+        <button
+          onClick={nextStep}
+          disabled={!acknowledged}
+          className="btn-primary flex items-center gap-2 mx-auto disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          <span>Get Started</span>
+          <ArrowRightIcon className="w-4 h-4" />
+        </button>
       </div>
     </div>
   );
