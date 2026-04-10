@@ -16,6 +16,7 @@ import {
   FinancialProfile,
   RentScenario,
   BuyScenario,
+  MortgageAcceleration,
   LifeEvent,
   ProjectionResult,
   BreakevenResult,
@@ -133,6 +134,7 @@ interface AppActions {
   // Buy Scenario Actions
   setBuyScenario: (scenario: Partial<BuyScenario>) => void;
   setBuyScenario2: (scenario: Partial<BuyScenario> | null) => void;
+  setAcceleration: (acceleration: MortgageAcceleration) => void;
   resetBuyScenario: () => void;
   addSecondBuyScenario: () => void;
   removeSecondBuyScenario: () => void;
@@ -243,6 +245,12 @@ export const useStore = create<Store>()(
         set((state) => ({
           buyScenario: { ...state.buyScenario, ...scenario },
           results: { ...state.results, lastCalculated: null },
+        })),
+
+      // Update acceleration without clearing results (used from results dashboard)
+      setAcceleration: (acceleration) =>
+        set((state) => ({
+          buyScenario: { ...state.buyScenario, acceleration },
         })),
 
       setBuyScenario2: (scenario) =>

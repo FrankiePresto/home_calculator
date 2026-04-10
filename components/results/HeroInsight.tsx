@@ -2,6 +2,7 @@
 
 import { useStore } from '@/lib/store';
 import { formatCurrency, formatYears } from '@/lib/utils/formatters';
+import { RentIcon, HomeIcon } from '@/components/shared';
 
 export function HeroInsight() {
   const results = useStore((state) => state.results);
@@ -26,17 +27,17 @@ export function HeroInsight() {
   const getBottomLine = () => {
     if (winner === 'rent') {
       if (breakeven?.timeBreakeven && breakeven.secondCrossover) {
-        return `Buying temporarily overtakes renting after ${formatYears(breakeven.timeBreakeven.exact, false)}, but renting catches back up around ${formatYears(breakeven.secondCrossover.exact, false)}. Over ${timeframe} years, renting wins by ${formatCurrency(difference)}.`;
+        return `Buying temporarily pulls ahead after ${formatYears(breakeven.timeBreakeven.exact, false)}, but renting regains the lead around ${formatYears(breakeven.secondCrossover.exact, false)}. Over ${timeframe} years, renting results in ${formatCurrency(difference)} more net worth.`;
       }
       if (breakeven?.timeBreakeven) {
-        return `If you plan to stay less than ${formatYears(breakeven.timeBreakeven.exact, false)}, renting is better. After that, buying ${buyScenario.name} wins.`;
+        return `If you plan to stay less than ${formatYears(breakeven.timeBreakeven.exact, false)}, renting leads to a higher net worth. Beyond that, buying ${buyScenario.name} becomes the stronger option.`;
       }
-      return `Renting beats buying ${buyScenario.name} over the entire ${timeframe}-year period. Consider a less expensive property or higher down payment.`;
+      return `Renting leads to a higher net worth than buying ${buyScenario.name} over the entire ${timeframe}-year period. Consider a less expensive property or higher down payment.`;
     } else {
       if (breakeven?.timeBreakeven && breakeven.timeBreakeven.exact > 0) {
-        return `After ${formatYears(breakeven.timeBreakeven.exact, false)}, buying ${buyScenario.name} becomes better than renting. You'll be ${formatCurrency(difference)} ahead after ${timeframe} years.`;
+        return `After ${formatYears(breakeven.timeBreakeven.exact, false)}, buying ${buyScenario.name} leads to a higher net worth than renting. You'll be ${formatCurrency(difference)} ahead after ${timeframe} years.`;
       }
-      return `Buying ${buyScenario.name} is better than renting from day one. You'll be ${formatCurrency(difference)} ahead after ${timeframe} years.`;
+      return `Buying ${buyScenario.name} leads to a higher net worth than renting from day one. You'll be ${formatCurrency(difference)} ahead after ${timeframe} years.`;
     }
   };
 
@@ -46,7 +47,7 @@ export function HeroInsight() {
         {/* Left side - Winner announcement */}
         <div className="flex-1">
           <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-2">
-            Winner at {timeframe} Years
+            {timeframe}-Year Outlook
           </p>
           <div className="flex items-center gap-4">
             <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${winner === 'rent' ? 'bg-info/10' : 'bg-success/10'}`}>
@@ -57,11 +58,13 @@ export function HeroInsight() {
               )}
             </div>
             <div>
-              <h2 className={`text-4xl font-bold ${textClass}`}>
-                {winner === 'rent' ? 'Renting' : 'Buying'}
+              <h2 className={`text-2xl md:text-3xl font-bold ${textClass}`}>
+                {winner === 'rent'
+                  ? <>Renting leads to a higher net worth vs buying {buyScenario.name}</>
+                  : <>Buying {buyScenario.name} leads to a higher net worth vs renting</>}
               </h2>
               <p className="text-muted-foreground mt-1">
-                by <span className="font-semibold text-foreground">{formatCurrency(difference)}</span>
+                by <span className="font-semibold text-foreground">{formatCurrency(difference)}</span> over {timeframe} years
               </p>
             </div>
           </div>
@@ -103,21 +106,5 @@ export function HeroInsight() {
         </p>
       </div>
     </div>
-  );
-}
-
-function RentIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z" />
-    </svg>
-  );
-}
-
-function HomeIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
-    </svg>
   );
 }

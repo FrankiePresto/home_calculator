@@ -10,7 +10,7 @@
  *   n = Total number of payments (years × 12)
  */
 
-import { AmortizationPayment, YearlyAmortization } from './types';
+import { AmortizationPayment, YearlyAmortization, MortgageAcceleration } from './types';
 
 /**
  * Calculate the monthly mortgage payment for a given loan
@@ -215,6 +215,99 @@ export function getRemainingAmortization(
   currentYear: number
 ): number {
   return Math.max(0, originalAmortization - currentYear + 1);
+}
+
+// =============================================================================
+// Mortgage Acceleration Helpers
+// =============================================================================
+
+/**
+ * Build a per-year lump sum map from MortgageAcceleration settings.
+ * Combines annual lump sums and periodic one-time payments.
+ */
+export function buildLumpSumMap(
+  acceleration: MortgageAcceleration,
+  amortizationYears: number
+): Map<number, number> {
+  const map = new Map<number, number>();
+
+  if (acceleration.annualLumpSum > 0) {
+    const end = acceleration.annualLumpSumEndYear ?? amortizationYears;
+    for (let y = acceleration.annualLumpSumStartYear; y <= end; y++) {
+      map.set(y, (map.get(y) || 0) + acceleration.annualLumpSum);
+    }
+  }
+
+  for (const p of acceleration.periodicPayments) {
+    if (p.amount > 0 && p.year >= 1 && p.year <= amortizationYears) {
+      map.set(p.year, (map.get(p.year) || 0) + p.amount);
+    }
+  }
+
+  return map;
+}
+
+/**
+ * Amortize one year of a mortgage with extra payments.
+ * Returns the same shape as amortizeYear plus extraPrincipal tracking
+ * and the lump sum amount actually applied.
+ */
+export function amortizeYearWithAcceleration(
+  startingBalance: number,
+  annualRate: number,
+  baseMonthlyPayment: number,
+  extraMonthlyPayment: number,
+  yearEndLumpSum: number
+): YearlyAmortization & {
+  interest: number;
+  principal: number;
+  extraPrincipal: number;
+  lumpSumApplied: number;
+} {
+  let balance = startingBalance;
+  let totalInterest = 0;
+  let totalPrincipal = 0;
+  let totalPayment = 0;
+  let basePrincipal = 0;
+  const monthlyRate = annualRate / 100 / 12;
+
+  for (let month = 1; month <= 12 && balance > 0; month++) {
+    const interest = balance * monthlyRate;
+
+    // Base payment principal
+    const basePayment = Math.min(baseMonthlyPayment, balance + interest);
+    const basePrinPaid = Math.max(0, Math.min(basePayment - interest, balance));
+
+    // Extra payment principal
+    const remainingAfterBase = balance - basePrinPaid;
+    const extraPrinPaid = Math.min(extraMonthlyPayment, remainingAfterBase);
+
+    totalInterest += interest;
+    totalPrincipal += basePrinPaid + extraPrinPaid;
+    basePrincipal += basePrinPaid;
+    totalPayment += interest + basePrinPaid + extraPrinPaid;
+    balance = Math.max(0, balance - basePrinPaid - extraPrinPaid);
+  }
+
+  // Apply year-end lump sum
+  const lumpSumApplied = Math.min(yearEndLumpSum, balance);
+  balance = Math.max(0, balance - lumpSumApplied);
+  totalPrincipal += lumpSumApplied;
+  totalPayment += lumpSumApplied;
+
+  const extraPrincipal = totalPrincipal - basePrincipal;
+
+  return {
+    year: 0,
+    totalPayment,
+    totalPrincipal,
+    totalInterest,
+    endingBalance: balance,
+    interest: totalInterest,
+    principal: totalPrincipal,
+    extraPrincipal,
+    lumpSumApplied,
+  };
 }
 
 // =============================================================================

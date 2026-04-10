@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDownIcon, ChevronUpIcon } from '@/components/shared';
 import { useStore } from '@/lib/store';
 import { formatCurrency } from '@/lib/utils/formatters';
 import { calculateMonthlyMortgagePayment } from '@/lib/engine/mortgage';
@@ -125,9 +125,9 @@ export function MathBreakdown() {
           className="inline-flex items-center gap-1 text-sm text-accent hover:text-amber-700 font-medium transition-colors"
         >
           {isExpanded ? (
-            <>Show Less <ChevronUp className="w-4 h-4" /></>
+            <>Show Less <ChevronUpIcon className="w-4 h-4" /></>
           ) : (
-            <>Show More <ChevronDown className="w-4 h-4" /></>
+            <>Show More <ChevronDownIcon className="w-4 h-4" /></>
           )}
         </button>
       </div>
@@ -135,7 +135,7 @@ export function MathBreakdown() {
       {/* Summary Explanation */}
       <div className={`p-5 rounded-xl mb-6 ${winner === 'rent' ? 'bg-info/10 border border-info/20' : 'bg-success/10 border border-success/20'}`}>
         <p className={`text-sm font-medium ${winner === 'rent' ? 'text-info' : 'text-success'}`}>
-          Why {winnerLabel} wins by {formatCurrency(Math.abs(breakdown.finalDifference))} after {timeframe} years:
+          Why {winnerLabel.toLowerCase()} leads to {formatCurrency(Math.abs(breakdown.finalDifference))} more net worth after {timeframe} years:
         </p>
         <ul className={`mt-3 text-sm space-y-1.5 ${winner === 'rent' ? 'text-info/90' : 'text-success/90'}`}>
           {winner === 'rent' ? (
@@ -162,13 +162,16 @@ export function MathBreakdown() {
         </ul>
       </div>
 
-      {/* Renter's Investment Advantage - only show when renting wins */}
+      {/* Renter's Investment Advantage - only show when renting leads */}
       {winner === 'rent' && breakdown.savingsDiff > 0 && (
         <div className="p-4 bg-info/10 border border-info/20 rounded-xl mb-6">
           <p className="text-sm text-info">
             <strong>Investment Advantage:</strong> When renting, you invest{' '}
             {formatCurrency(breakdown.savingsDiff)} more per month into your portfolio. Over {timeframe} years,
-            this grows to {formatCurrency(breakdown.yearlyData[timeframe].rentPortfolio)}.
+            the renter's portfolio grows to {formatCurrency(breakdown.yearlyData[timeframe].rentPortfolio)} vs
+            the buyer's {formatCurrency(breakdown.yearlyData[timeframe].buyPortfolio)} — a difference
+            of {formatCurrency(breakdown.yearlyData[timeframe].rentPortfolio - breakdown.yearlyData[timeframe].buyPortfolio)} in
+            investment assets alone.
           </p>
         </div>
       )}
