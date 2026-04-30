@@ -43,6 +43,7 @@ function deflateCashFlow(cashFlow: CashFlowBreakdown, deflator: number): CashFlo
     toUtilities: cashFlow.toUtilities / deflator,
     toOtherExpenses: cashFlow.toOtherExpenses / deflator,
     toLifeEvents: cashFlow.toLifeEvents / deflator,
+    fromLifeEvents: cashFlow.fromLifeEvents / deflator,
     toInvestments: cashFlow.toInvestments / deflator,
   };
 }

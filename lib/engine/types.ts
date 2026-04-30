@@ -148,7 +148,8 @@ export interface CashFlowBreakdown {
   toStrata: number;
   toUtilities: number;
   toOtherExpenses: number;
-  toLifeEvents: number;
+  toLifeEvents: number;       // Annual outflows from one-time expenses + recurring life-event expenses
+  fromLifeEvents: number;     // Annual inflows from windfalls/inheritance + recurring life-event income
   toInvestments: number;
 }
 
@@ -245,8 +246,9 @@ export interface YearlyAmortization {
 // =============================================================================
 
 export interface LifeEventImpact {
-  oneTimeExpenses: number;
-  monthlyAdjustment: number;
+  oneTimeExpenses: number;            // Sum of |amount| for negative one-time events
+  oneTimeIncome: number;              // Sum of amount for positive one-time events (windfalls, inheritance)
+  monthlyAdjustment: number;          // Signed monthly delta: negative = expense, positive = income
   incomeOverride: number | null;
   incomePercentChange: number | null;
   incomeMultiplier: number | null;    // For phase-based income changes (e.g., 0.5 = 50%)

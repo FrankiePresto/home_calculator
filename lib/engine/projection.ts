@@ -118,6 +118,7 @@ export function processLifeEvents(
   currentIncome: number
 ): LifeEventImpact {
   let oneTimeExpenses = 0;
+  let oneTimeIncome = 0;
   let monthlyAdjustment = 0;
   let incomeOverride: number | null = null;
   let incomePercentChange: number | null = null;
@@ -135,8 +136,12 @@ export function processLifeEvents(
     switch (event.type) {
       case 'one-time':
         if (event.year === currentYear && event.amount !== undefined) {
-          // Negative amounts are expenses
-          oneTimeExpenses += Math.abs(event.amount);
+          // Sign convention: negative = expense (e.g. wedding), positive = income (e.g. inheritance)
+          if (event.amount < 0) {
+            oneTimeExpenses += Math.abs(event.amount);
+          } else {
+            oneTimeIncome += event.amount;
+          }
         }
         break;
 
@@ -203,6 +208,7 @@ export function processLifeEvents(
 
   return {
     oneTimeExpenses,
+    oneTimeIncome,
     monthlyAdjustment,
     incomeOverride,
     incomePercentChange,
@@ -232,6 +238,7 @@ function createEmptyCashFlow(): CashFlowBreakdown {
     toUtilities: 0,
     toOtherExpenses: 0,
     toLifeEvents: 0,
+    fromLifeEvents: 0,
     toInvestments: 0,
   };
 }
@@ -335,12 +342,14 @@ export function projectRentScenario(
 
     // 4. Calculate discretionary income (use net income for actual cash flow)
     const monthlyIncome = netAnnualIncome / 12;
-    const monthlyLifeEventAdjustment = Math.abs(lifeEventImpact.monthlyAdjustment);
+    // monthlyAdjustment is signed: negative = expense, positive = recurring income (e.g. side hustle)
+    const monthlyLifeEventExpense = Math.max(0, -lifeEventImpact.monthlyAdjustment);
+    const monthlyLifeEventIncome = Math.max(0, lifeEventImpact.monthlyAdjustment);
     const totalMonthlyExpenses =
       monthlyHousingCost +
       currentNonHousingExpenses +
-      monthlyLifeEventAdjustment;
-    const monthlyDiscretionary = monthlyIncome - totalMonthlyExpenses;
+      monthlyLifeEventExpense;
+    const monthlyDiscretionary = monthlyIncome - totalMonthlyExpenses + monthlyLifeEventIncome;
     const monthlySavings = Math.max(
       0,
       monthlyDiscretionary * (profile.savingsRate / 100)
@@ -379,6 +388,11 @@ export function projectRentScenario(
       }
     }
 
+    // 8b. Apply one-time income (windfalls, inheritance) directly to portfolio
+    if (lifeEventImpact.oneTimeIncome > 0) {
+      portfolio += lifeEventImpact.oneTimeIncome;
+    }
+
     // 9. Build cash flow breakdown (use net income for accurate reporting)
     const cashFlow: CashFlowBreakdown = {
       income: netAnnualIncome,
@@ -392,7 +406,9 @@ export function projectRentScenario(
       toUtilities: 0,
       toOtherExpenses: currentNonHousingExpenses * 12,
       toLifeEvents:
-        lifeEventImpact.oneTimeExpenses + monthlyLifeEventAdjustment * 12,
+        lifeEventImpact.oneTimeExpenses + monthlyLifeEventExpense * 12,
+      fromLifeEvents:
+        lifeEventImpact.oneTimeIncome + monthlyLifeEventIncome * 12,
       toInvestments: monthlySavings * 12,
     };
 
@@ -403,7 +419,8 @@ export function projectRentScenario(
       annualGrossIncome: grossAnnualIncome,
       monthlyHousingCost,
       monthlyNonHousingExpenses: currentNonHousingExpenses,
-      monthlyLifeEventAdjustment,
+      // Display field: signed magnitude of the monthly life-event delta
+      monthlyLifeEventAdjustment: Math.abs(lifeEventImpact.monthlyAdjustment),
       monthlyDiscretionary,
       monthlySavings,
       investmentPortfolio: portfolio,
@@ -577,12 +594,14 @@ export function projectBuyScenario(
 
     // 5. Calculate discretionary income (use net income for actual cash flow)
     const monthlyIncome = netAnnualIncome / 12;
-    const monthlyLifeEventAdjustment = Math.abs(lifeEventImpact.monthlyAdjustment);
+    // monthlyAdjustment is signed: negative = expense, positive = recurring income (e.g. side hustle)
+    const monthlyLifeEventExpense = Math.max(0, -lifeEventImpact.monthlyAdjustment);
+    const monthlyLifeEventIncome = Math.max(0, lifeEventImpact.monthlyAdjustment);
     const totalMonthlyExpenses =
       monthlyHousingCost +
       currentNonHousingExpenses +
-      monthlyLifeEventAdjustment;
-    const monthlyDiscretionary = monthlyIncome - totalMonthlyExpenses;
+      monthlyLifeEventExpense;
+    const monthlyDiscretionary = monthlyIncome - totalMonthlyExpenses + monthlyLifeEventIncome;
     const monthlySavings = Math.max(
       0,
       monthlyDiscretionary * (profile.savingsRate / 100)
@@ -621,6 +640,11 @@ export function projectBuyScenario(
       }
     }
 
+    // 9a. Apply one-time income (windfalls, inheritance) directly to portfolio
+    if (lifeEventImpact.oneTimeIncome > 0) {
+      portfolio += lifeEventImpact.oneTimeIncome;
+    }
+
     // 9b. Deduct lump sum from portfolio (extra monthly is already in housing cost)
     if (lumpSumApplied > 0) {
       const fromPortfolio = Math.min(portfolio, lumpSumApplied);
@@ -652,7 +676,9 @@ export function projectBuyScenario(
       toUtilities: currentUtilities * 12,
       toOtherExpenses: currentNonHousingExpenses * 12,
       toLifeEvents:
-        lifeEventImpact.oneTimeExpenses + monthlyLifeEventAdjustment * 12,
+        lifeEventImpact.oneTimeExpenses + monthlyLifeEventExpense * 12,
+      fromLifeEvents:
+        lifeEventImpact.oneTimeIncome + monthlyLifeEventIncome * 12,
       toInvestments: monthlySavings * 12,
     };
 
@@ -663,7 +689,8 @@ export function projectBuyScenario(
       annualGrossIncome: grossAnnualIncome,
       monthlyHousingCost,
       monthlyNonHousingExpenses: currentNonHousingExpenses,
-      monthlyLifeEventAdjustment,
+      // Display field: signed magnitude of the monthly life-event delta
+      monthlyLifeEventAdjustment: Math.abs(lifeEventImpact.monthlyAdjustment),
       monthlyDiscretionary,
       monthlySavings,
       investmentPortfolio: portfolio,
