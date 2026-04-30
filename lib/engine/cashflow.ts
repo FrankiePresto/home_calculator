@@ -87,8 +87,10 @@ export function categorizeAnnualCashFlow(
   const totalSunk = Object.values(sunkCosts).reduce((a, b) => a + b, 0);
   const totalWealth = Object.values(wealthBuilding).reduce((a, b) => a + b, 0);
 
+  // Include life-event income (windfalls, side hustle, inheritance) in total inflow
+  // so the chart's stacked bar correctly sums to total annual cash flowing in.
   return {
-    grossIncome: cf.income,
+    grossIncome: cf.income + (cf.fromLifeEvents ?? 0),
     sunkCosts,
     wealthBuilding,
     totalSunk,
