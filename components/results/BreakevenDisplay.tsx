@@ -2,10 +2,11 @@
 
 import { useMemo } from 'react';
 import { useStore } from '@/lib/store';
+import { useAdjustedResults } from '@/lib/hooks/useAdjustedResults';
 import { formatCurrency, formatYears } from '@/lib/utils/formatters';
 
 export function BreakevenDisplay() {
-  const results = useStore((state) => state.results);
+  const results = useAdjustedResults();
   const timeframe = useStore((state) => state.settings.timeframeYears);
   const rentScenario = useStore((state) => state.rentScenario);
 

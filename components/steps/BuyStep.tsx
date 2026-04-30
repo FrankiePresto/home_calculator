@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useStore } from '@/lib/store';
-import { BuyScenario } from '@/lib/engine/types';
+import { BuyScenario, FinancialProfile } from '@/lib/engine/types';
 import { CurrencyInput, PercentInput, SliderInput, SelectInput, InfoTooltip, PlusIcon, CheckIcon, XIcon, ChevronRightIcon, SettingsIcon } from '@/components/shared';
 import { formatCurrency } from '@/lib/utils/formatters';
 import { calculateMonthlyMortgagePayment } from '@/lib/engine/mortgage';
@@ -92,10 +92,7 @@ export function BuyStep() {
 interface BuyScenarioFormContentProps {
   scenario: BuyScenario;
   onChange: (updates: Partial<BuyScenario>) => void;
-  profile: {
-    currentInvestmentPortfolio: number;
-    annualGrossIncome: number;
-  };
+  profile: FinancialProfile;
   colorClass: string;
   isSecondary: boolean;
   onRemove?: () => void;
@@ -117,6 +114,11 @@ function BuyScenarioFormContent({
   const totalUpfront = downPaymentAmount + closingCosts;
   const canAfford = profile.currentInvestmentPortfolio >= totalUpfront;
   const needsInsurance = scenario.downPaymentPercent < 20;
+
+  // Household income (sums both earners for dual-income households)
+  const isDualIncome = profile.incomeType === 'dual' && (profile.secondaryIncome || 0) > 0;
+  const householdGrossIncome = profile.annualGrossIncome + (isDualIncome ? (profile.secondaryIncome || 0) : 0);
+  const monthlyHouseholdGrossIncome = householdGrossIncome / 12;
 
   // Monthly costs using engine function
   const principal = scenario.purchasePrice - downPaymentAmount;
@@ -386,7 +388,7 @@ function BuyScenarioFormContent({
               {formatCurrency(totalMonthly)}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              vs {formatCurrency(profile.annualGrossIncome / 12 * 0.28)} guideline (28%)
+              vs {formatCurrency(monthlyHouseholdGrossIncome * 0.28)} guideline (28% of {isDualIncome ? 'household ' : ''}gross)
             </p>
           </div>
         </div>

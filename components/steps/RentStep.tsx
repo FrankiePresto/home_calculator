@@ -11,10 +11,15 @@ export function RentStep() {
 
   // Calculate monthly total
   const monthlyTotal = scenario.monthlyRent + scenario.rentersInsurance;
-  
+
   // Calculate rent projection
   const yearsToProject = 5;
   const rentIn5Years = scenario.monthlyRent * Math.pow(1 + scenario.annualRentIncrease / 100, yearsToProject);
+
+  // Use household gross income for affordability so dual-income households are sized correctly
+  const isDualIncome = profile.incomeType === 'dual' && (profile.secondaryIncome || 0) > 0;
+  const householdGrossIncome = profile.annualGrossIncome + (isDualIncome ? (profile.secondaryIncome || 0) : 0);
+  const monthlyHouseholdGrossIncome = householdGrossIncome / 12;
 
   return (
     <div className="space-y-8">
@@ -103,11 +108,11 @@ export function RentStep() {
         
         <div className="space-y-4">
           <AffordabilityBar
-            label="Rent as % of Gross Income"
+            label={`Rent as % of ${isDualIncome ? 'Household ' : ''}Gross Income`}
             current={monthlyTotal}
-            total={profile.annualGrossIncome / 12}
+            total={monthlyHouseholdGrossIncome}
             threshold={30}
-            warningText="Aim for under 30% of gross income"
+            warningText={`Aim for under 30% of ${isDualIncome ? 'household ' : ''}gross income`}
           />
         </div>
         

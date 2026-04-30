@@ -83,9 +83,10 @@ function checkMortgageStress(
   snapshot: YearlySnapshot,
   scenario: 'rent' | 'buy'
 ): WarningData | null {
-  if (snapshot.annualIncome <= 0) return null;
+  // Mortgage stress is a gross-income rule (35%/44%); use gross even when taxes are enabled.
+  if (snapshot.annualGrossIncome <= 0) return null;
 
-  const monthlyGrossIncome = snapshot.annualIncome / 12;
+  const monthlyGrossIncome = snapshot.annualGrossIncome / 12;
   const housingRatio = snapshot.monthlyHousingCost / monthlyGrossIncome;
 
   if (housingRatio >= MORTGAGE_STRESS_CRITICAL) {

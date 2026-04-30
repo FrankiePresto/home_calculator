@@ -3,11 +3,12 @@
 import { useMemo, useState } from 'react';
 import { ChevronDownIcon, ChevronUpIcon } from '@/components/shared';
 import { useStore } from '@/lib/store';
+import { useAdjustedResults } from '@/lib/hooks/useAdjustedResults';
 import { formatCurrency } from '@/lib/utils/formatters';
-import { calculateMonthlyMortgagePayment } from '@/lib/engine/mortgage';
+import { calculateMonthlyMortgagePayment, calculateClosingCosts } from '@/lib/engine/mortgage';
 
 export function MathBreakdown() {
-  const results = useStore((state) => state.results);
+  const results = useAdjustedResults();
   const financialProfile = useStore((state) => state.financialProfile);
   const rentScenario = useStore((state) => state.rentScenario);
   const buyScenario = useStore((state) => state.buyScenario);
@@ -22,7 +23,12 @@ export function MathBreakdown() {
 
     // Calculate key values for the buy scenario
     const downPayment = buyScenario.purchasePrice * (buyScenario.downPaymentPercent / 100);
-    const closingCosts = buyScenario.purchasePrice * ((buyScenario.closingCostPercent ?? 3) / 100);
+    // Match the engine's logic: flat closing cost takes precedence over percent
+    const closingCosts = calculateClosingCosts(
+      buyScenario.purchasePrice,
+      buyScenario.closingCostPercent,
+      buyScenario.closingCostFlat
+    );
     const loanAmount = buyScenario.purchasePrice - downPayment;
     const mortgageInsurance = loanAmount * (buyScenario.mortgageInsurancePercent / 100);
     const totalLoan = loanAmount + mortgageInsurance;
@@ -376,6 +382,12 @@ export function MathBreakdown() {
                   <span className="text-muted-foreground">Mortgage Rate:</span>
                   <span>{buyScenario.interestRate}% ({buyScenario.amortizationYears} years)</span>
                 </div>
+                {financialProfile.inflationRate > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Inflation Rate:</span>
+                    <span>{financialProfile.inflationRate}% annually</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>

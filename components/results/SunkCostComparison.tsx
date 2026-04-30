@@ -15,6 +15,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { useStore } from '@/lib/store';
+import { useAdjustedResults } from '@/lib/hooks/useAdjustedResults';
 import { formatCurrency, formatCurrencyCompact } from '@/lib/utils/formatters';
 import { categorizeAnnualCashFlow } from '@/lib/engine/cashflow';
 
@@ -28,7 +29,7 @@ const COLORS = {
 type ViewMode = 'annual' | 'cumulative';
 
 export function SunkCostComparison() {
-  const results = useStore((state) => state.results);
+  const results = useAdjustedResults();
   const timeframe = useStore((state) => state.settings.timeframeYears);
   const [selectedYear, setSelectedYear] = useState(5);
   const [viewMode, setViewMode] = useState<ViewMode>('cumulative');

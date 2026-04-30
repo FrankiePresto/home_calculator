@@ -84,6 +84,16 @@ export function validateFinancialProfile(
   );
   if (incomeError) errors.push(incomeError);
 
+  // For dual-income households, secondary income must be a valid non-negative number
+  if (profile.incomeType === 'dual') {
+    const secondaryError = validateCurrency(
+      profile.secondaryIncome ?? 0,
+      'Secondary Income',
+      { min: 0 }
+    );
+    if (secondaryError) errors.push(secondaryError);
+  }
+
   const expensesError = validateCurrency(
     profile.monthlyNonHousingExpenses ?? 0,
     'Monthly Non-Housing Expenses',

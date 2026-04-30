@@ -13,6 +13,7 @@ import {
   ReferenceLine,
 } from 'recharts';
 import { useStore } from '@/lib/store';
+import { useAdjustedResults } from '@/lib/hooks/useAdjustedResults';
 import { formatCurrency, formatCurrencyCompact } from '@/lib/utils/formatters';
 
 interface ChartDataPoint {
@@ -37,7 +38,7 @@ const COLORS = {
 };
 
 export function NetWorthChart() {
-  const results = useStore((state) => state.results);
+  const results = useAdjustedResults();
   const buyScenario = useStore((state) => state.buyScenario);
   const buyScenario2 = useStore((state) => state.buyScenario2);
 

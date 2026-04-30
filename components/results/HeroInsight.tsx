@@ -1,11 +1,12 @@
 'use client';
 
 import { useStore } from '@/lib/store';
+import { useAdjustedResults } from '@/lib/hooks/useAdjustedResults';
 import { formatCurrency, formatYears } from '@/lib/utils/formatters';
 import { RentIcon, HomeIcon } from '@/components/shared';
 
 export function HeroInsight() {
-  const results = useStore((state) => state.results);
+  const results = useAdjustedResults();
   const timeframe = useStore((state) => state.settings.timeframeYears);
   const buyScenario = useStore((state) => state.buyScenario);
 

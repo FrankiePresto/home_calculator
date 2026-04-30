@@ -27,6 +27,8 @@ export function ResultsDashboard() {
   const results = useStore((state) => state.results);
   const { setStep } = useWizard();
   const calculate = useStore((state) => state.calculate);
+  const showNominal = useStore((state) => state.settings.showNominalDollars);
+  const inflationRate = useStore((state) => state.financialProfile.inflationRate ?? 0);
   const [activeTab, setActiveTab] = useState<TabId>('overview');
 
   if (!results.lastCalculated) {
@@ -99,6 +101,26 @@ export function ResultsDashboard() {
           ))}
         </nav>
       </div>
+
+      {/* Inflation toggle */}
+      {inflationRate > 0 && (
+        <div className="flex items-center justify-end gap-3 px-1">
+          <label className="flex items-center gap-2 text-sm cursor-pointer">
+            <input
+              type="checkbox"
+              checked={showNominal}
+              onChange={(e) => useStore.getState().setShowNominalDollars(e.target.checked)}
+              className="checkbox"
+            />
+            <span className="text-muted-foreground">
+              Show future dollar amounts
+            </span>
+          </label>
+          <span className="text-xs text-muted-foreground bg-secondary px-2 py-1 rounded">
+            {showNominal ? 'Nominal dollars' : `Today\u2019s dollars (${inflationRate}% inflation)`}
+          </span>
+        </div>
+      )}
 
       {/* Tab Content */}
       <div className="animate-fade-in">

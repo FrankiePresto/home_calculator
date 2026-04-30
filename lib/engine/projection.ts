@@ -43,35 +43,26 @@ function calculateEffectiveHouseholdIncome(
   secondaryGross: number,
   lifeEventImpact: LifeEventImpact,
   profile: FinancialProfile
-): { effectivePrimary: number; effectiveSecondary: number; totalNet: number } {
-  // Apply life event impacts to each earner
+): { effectivePrimary: number; effectiveSecondary: number; totalGross: number; totalNet: number } {
+  // Permanent income changes (newAnnualIncome / percentChange with 'ongoing' duration)
+  // are baked into primaryGross/secondaryGross by the projection loop, so they persist
+  // across years. Here we only apply phase-based multipliers (e.g. parental leave).
   let effectivePrimary = primaryGross;
   let effectiveSecondary = secondaryGross;
 
-  // Primary income adjustments
-  if (lifeEventImpact.primaryIncomeOverride !== null) {
-    effectivePrimary = lifeEventImpact.primaryIncomeOverride;
-  } else if (lifeEventImpact.primaryIncomePercentChange !== null) {
-    effectivePrimary *= 1 + lifeEventImpact.primaryIncomePercentChange / 100;
-  }
   if (lifeEventImpact.primaryIncomeMultiplier !== null) {
     effectivePrimary *= lifeEventImpact.primaryIncomeMultiplier;
-  }
-
-  // Secondary income adjustments
-  if (lifeEventImpact.secondaryIncomeOverride !== null) {
-    effectiveSecondary = lifeEventImpact.secondaryIncomeOverride;
-  } else if (lifeEventImpact.secondaryIncomePercentChange !== null) {
-    effectiveSecondary *= 1 + lifeEventImpact.secondaryIncomePercentChange / 100;
   }
   if (lifeEventImpact.secondaryIncomeMultiplier !== null) {
     effectiveSecondary *= lifeEventImpact.secondaryIncomeMultiplier;
   }
 
+  const totalGross = effectivePrimary + effectiveSecondary;
+
   // Calculate net income after taxes
   let totalNet: number;
   if (!profile.includeTaxes) {
-    totalNet = effectivePrimary + effectiveSecondary;
+    totalNet = totalGross;
   } else {
     const province = (profile.province || 'ON') as Province;
     if (profile.incomeType === 'dual' && effectiveSecondary > 0) {
@@ -82,7 +73,40 @@ function calculateEffectiveHouseholdIncome(
     }
   }
 
-  return { effectivePrimary, effectiveSecondary, totalNet };
+  return { effectivePrimary, effectiveSecondary, totalGross, totalNet };
+}
+
+/**
+ * Apply permanent (non-phase) income-change events for the current year directly
+ * to the running income state, so that changes persist across subsequent years
+ * and compound with annual raises.
+ */
+function applyPermanentIncomeChanges(
+  events: LifeEvent[],
+  currentYear: number,
+  income: { primary: number; secondary: number }
+): void {
+  for (const event of events) {
+    if (event.type !== 'income-change') continue;
+    if (event.incomeChangeDuration === 'phase') continue; // phase events handled per-year
+    if (event.year !== currentYear) continue;
+
+    const earner = event.affectedEarner || 'primary';
+    if (event.newAnnualIncome !== undefined) {
+      if (earner === 'secondary') {
+        income.secondary = event.newAnnualIncome;
+      } else {
+        income.primary = event.newAnnualIncome;
+      }
+    } else if (event.percentChange !== undefined) {
+      const factor = 1 + event.percentChange / 100;
+      if (earner === 'secondary') {
+        income.secondary *= factor;
+      } else {
+        income.primary *= factor;
+      }
+    }
+  }
 }
 
 /**
@@ -223,10 +247,14 @@ function createYear0Snapshot(
   nonInvestedSavingsBalance: number = 0
 ): YearlySnapshot {
   const homeEquity = homeValue - mortgageBalance;
+  const householdGrossIncome =
+    profile.annualGrossIncome +
+    (profile.incomeType === 'dual' ? (profile.secondaryIncome || 0) : 0);
 
   return {
     year: 0,
-    annualIncome: profile.annualGrossIncome,
+    annualIncome: householdGrossIncome,
+    annualGrossIncome: householdGrossIncome,
     monthlyHousingCost: 0,
     monthlyNonHousingExpenses: profile.monthlyNonHousingExpenses,
     monthlyLifeEventAdjustment: 0,
@@ -262,6 +290,11 @@ export function projectRentScenario(
   let currentSecondaryIncome = profile.incomeType === 'dual' ? (profile.secondaryIncome || 0) : 0;
   let currentRent = scenario.monthlyRent;
 
+  // Inflation-adjusted costs
+  const inflationRate = (profile.inflationRate ?? 0) / 100;
+  let currentRentersInsurance = scenario.rentersInsurance;
+  let currentNonHousingExpenses = profile.monthlyNonHousingExpenses;
+
   snapshots.push(
     createYear0Snapshot(profile, portfolio, 0, 0, nonInvestedSavings)
   );
@@ -272,7 +305,16 @@ export function projectRentScenario(
     if (year > 1) {
       currentPrimaryIncome *= 1 + profile.annualRaisePercent / 100;
       currentSecondaryIncome *= 1 + profile.annualRaisePercent / 100;
+      // Apply inflation to fixed costs
+      currentRentersInsurance *= 1 + inflationRate;
+      currentNonHousingExpenses *= 1 + inflationRate;
     }
+
+    // 1b. Permanent income changes mutate the running income state so they persist
+    const incomeState = { primary: currentPrimaryIncome, secondary: currentSecondaryIncome };
+    applyPermanentIncomeChanges(lifeEvents, year, incomeState);
+    currentPrimaryIncome = incomeState.primary;
+    currentSecondaryIncome = incomeState.secondary;
 
     // 2. Process life events
     const lifeEventImpact = processLifeEvents(lifeEvents, year, currentPrimaryIncome);
@@ -286,16 +328,17 @@ export function projectRentScenario(
     );
 
     const netAnnualIncome = incomeResult.totalNet;
+    const grossAnnualIncome = incomeResult.totalGross;
 
     // 3. Calculate monthly housing cost
-    const monthlyHousingCost = currentRent + scenario.rentersInsurance;
+    const monthlyHousingCost = currentRent + currentRentersInsurance;
 
     // 4. Calculate discretionary income (use net income for actual cash flow)
     const monthlyIncome = netAnnualIncome / 12;
     const monthlyLifeEventAdjustment = Math.abs(lifeEventImpact.monthlyAdjustment);
     const totalMonthlyExpenses =
       monthlyHousingCost +
-      profile.monthlyNonHousingExpenses +
+      currentNonHousingExpenses +
       monthlyLifeEventAdjustment;
     const monthlyDiscretionary = monthlyIncome - totalMonthlyExpenses;
     const monthlySavings = Math.max(
@@ -343,11 +386,11 @@ export function projectRentScenario(
       toMortgageInterest: 0,
       toMortgagePrincipal: 0,
       toPropertyTax: 0,
-      toInsurance: scenario.rentersInsurance * 12,
+      toInsurance: currentRentersInsurance * 12,
       toMaintenance: 0,
       toStrata: 0,
       toUtilities: 0,
-      toOtherExpenses: profile.monthlyNonHousingExpenses * 12,
+      toOtherExpenses: currentNonHousingExpenses * 12,
       toLifeEvents:
         lifeEventImpact.oneTimeExpenses + monthlyLifeEventAdjustment * 12,
       toInvestments: monthlySavings * 12,
@@ -357,8 +400,9 @@ export function projectRentScenario(
     snapshots.push({
       year,
       annualIncome: netAnnualIncome,
+      annualGrossIncome: grossAnnualIncome,
       monthlyHousingCost,
-      monthlyNonHousingExpenses: profile.monthlyNonHousingExpenses,
+      monthlyNonHousingExpenses: currentNonHousingExpenses,
       monthlyLifeEventAdjustment,
       monthlyDiscretionary,
       monthlySavings,
@@ -414,6 +458,15 @@ export function projectBuyScenario(
   let currentPrimaryIncome = profile.annualGrossIncome;
   let currentSecondaryIncome = profile.incomeType === 'dual' ? (profile.secondaryIncome || 0) : 0;
 
+  // Inflation-adjusted costs
+  const inflationRate = (profile.inflationRate ?? 0) / 100;
+  let currentPropertyTax = scenario.monthlyPropertyTax;
+  let currentHomeInsurance = scenario.monthlyHomeInsurance;
+  let currentStrataFees = scenario.monthlyStrataFees;
+  let currentUtilities = scenario.monthlyUtilities;
+  let currentMaintenance = scenario.monthlyMaintenance;
+  let currentNonHousingExpenses = profile.monthlyNonHousingExpenses;
+
   snapshots.push(
     createYear0Snapshot(profile, portfolio, homeValue, mortgageBalance, nonInvestedSavings)
   );
@@ -428,7 +481,20 @@ export function projectBuyScenario(
     if (year > 1) {
       currentPrimaryIncome *= 1 + profile.annualRaisePercent / 100;
       currentSecondaryIncome *= 1 + profile.annualRaisePercent / 100;
+      // Apply inflation to fixed costs
+      currentPropertyTax *= 1 + inflationRate;
+      currentHomeInsurance *= 1 + inflationRate;
+      currentStrataFees *= 1 + inflationRate;
+      currentUtilities *= 1 + inflationRate;
+      currentMaintenance *= 1 + inflationRate;
+      currentNonHousingExpenses *= 1 + inflationRate;
     }
+
+    // 1b. Permanent income changes mutate the running income state so they persist
+    const incomeState = { primary: currentPrimaryIncome, secondary: currentSecondaryIncome };
+    applyPermanentIncomeChanges(lifeEvents, year, incomeState);
+    currentPrimaryIncome = incomeState.primary;
+    currentSecondaryIncome = incomeState.secondary;
 
     // 2. Process life events
     const lifeEventImpact = processLifeEvents(lifeEvents, year, currentPrimaryIncome);
@@ -442,6 +508,7 @@ export function projectBuyScenario(
     );
 
     const netAnnualIncome = incomeResult.totalNet;
+    const grossAnnualIncome = incomeResult.totalGross;
 
     // 4. Calculate mortgage payment and breakdown
     const rate = getRateForYear(
@@ -502,18 +569,18 @@ export function projectBuyScenario(
     // 4c. Calculate monthly housing cost
     const monthlyHousingCost =
       effectiveMonthlyMortgage +
-      scenario.monthlyPropertyTax +
-      scenario.monthlyHomeInsurance +
-      scenario.monthlyStrataFees +
-      scenario.monthlyUtilities +
-      scenario.monthlyMaintenance;
+      currentPropertyTax +
+      currentHomeInsurance +
+      currentStrataFees +
+      currentUtilities +
+      currentMaintenance;
 
     // 5. Calculate discretionary income (use net income for actual cash flow)
     const monthlyIncome = netAnnualIncome / 12;
     const monthlyLifeEventAdjustment = Math.abs(lifeEventImpact.monthlyAdjustment);
     const totalMonthlyExpenses =
       monthlyHousingCost +
-      profile.monthlyNonHousingExpenses +
+      currentNonHousingExpenses +
       monthlyLifeEventAdjustment;
     const monthlyDiscretionary = monthlyIncome - totalMonthlyExpenses;
     const monthlySavings = Math.max(
@@ -578,12 +645,12 @@ export function projectBuyScenario(
       toRent: 0,
       toMortgageInterest: amortInterest,
       toMortgagePrincipal: amortPrincipal,
-      toPropertyTax: scenario.monthlyPropertyTax * 12,
-      toInsurance: scenario.monthlyHomeInsurance * 12,
-      toMaintenance: scenario.monthlyMaintenance * 12,
-      toStrata: scenario.monthlyStrataFees * 12,
-      toUtilities: scenario.monthlyUtilities * 12,
-      toOtherExpenses: profile.monthlyNonHousingExpenses * 12,
+      toPropertyTax: currentPropertyTax * 12,
+      toInsurance: currentHomeInsurance * 12,
+      toMaintenance: currentMaintenance * 12,
+      toStrata: currentStrataFees * 12,
+      toUtilities: currentUtilities * 12,
+      toOtherExpenses: currentNonHousingExpenses * 12,
       toLifeEvents:
         lifeEventImpact.oneTimeExpenses + monthlyLifeEventAdjustment * 12,
       toInvestments: monthlySavings * 12,
@@ -593,8 +660,9 @@ export function projectBuyScenario(
     snapshots.push({
       year,
       annualIncome: netAnnualIncome,
+      annualGrossIncome: grossAnnualIncome,
       monthlyHousingCost,
-      monthlyNonHousingExpenses: profile.monthlyNonHousingExpenses,
+      monthlyNonHousingExpenses: currentNonHousingExpenses,
       monthlyLifeEventAdjustment,
       monthlyDiscretionary,
       monthlySavings,

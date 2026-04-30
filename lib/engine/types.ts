@@ -24,6 +24,9 @@ export interface FinancialProfile {
   includeTaxes: boolean;              // Toggle tax calculations
   province: string;                   // 'BC', 'ON', 'AB' (default: 'ON')
 
+  // Inflation
+  inflationRate: number;              // Annual inflation rate % (default: 2%)
+
   // Dual income support
   incomeType: 'single' | 'dual';      // Single or dual income household
   secondaryIncome: number;            // Second earner's annual gross income
@@ -157,7 +160,8 @@ export interface YearlySnapshot {
   year: number;                       // 0 = initial state, 1+ = end of year
 
   // Income & Expenses
-  annualIncome: number;
+  annualIncome: number;               // Net (after-tax) when includeTaxes; otherwise gross
+  annualGrossIncome: number;          // Always gross household income (used for ratios e.g. 28%/35%)
   monthlyHousingCost: number;
   monthlyNonHousingExpenses: number;
   monthlyLifeEventAdjustment: number;

@@ -45,6 +45,7 @@ const defaultFinancialProfile: FinancialProfile = {
   nonInvestedReturnRate: 2,   // Default: 2% HISA rate
   includeTaxes: false,        // Default: taxes disabled (preserves current behavior)
   province: 'ON',             // Default: Ontario
+  inflationRate: 2,           // Default: 2% annual inflation
   incomeType: 'single',       // Default: single income household
   secondaryIncome: 0,         // Default: no secondary income
 };
@@ -77,6 +78,7 @@ const defaultBuyScenario: BuyScenario = {
 
 interface AnalysisSettings {
   timeframeYears: number;
+  showNominalDollars: boolean;
 }
 
 export interface SavedScenario {
@@ -147,6 +149,7 @@ interface AppActions {
 
   // Settings Actions
   setTimeframe: (years: number) => void;
+  setShowNominalDollars: (show: boolean) => void;
 
   // Calculation Actions
   calculate: () => void;
@@ -183,6 +186,7 @@ export const useStore = create<Store>()(
       lifeEvents: [],
       settings: {
         timeframeYears: 10,
+        showNominalDollars: false,
       },
       savedScenarios: [],
       results: {
@@ -340,6 +344,11 @@ export const useStore = create<Store>()(
           results: { ...state.results, lastCalculated: null },
         })),
 
+      setShowNominalDollars: (show) =>
+        set((state) => ({
+          settings: { ...state.settings, showNominalDollars: show },
+        })),
+
       // Calculation Actions
       calculate: () => {
         const state = get();
@@ -444,7 +453,7 @@ export const useStore = create<Store>()(
           buyScenario: defaultBuyScenario,
           buyScenario2: null,
           lifeEvents: [],
-          settings: { timeframeYears: 10 },
+          settings: { timeframeYears: 10, showNominalDollars: false },
           results: {
             rentProjection: null,
             buyProjection: null,
@@ -525,6 +534,33 @@ export const useStore = create<Store>()(
         settings: state.settings,
         savedScenarios: state.savedScenarios,
       }),
+      // Deep-merge persisted state with current defaults so older saved state
+      // (missing newly added fields like incomeType, secondaryIncome, inflationRate)
+      // gets sensible defaults instead of `undefined`, which would otherwise
+      // produce NaN propagation through the calculator.
+      merge: (persisted, current) => {
+        const p = (persisted ?? {}) as Partial<AppState>;
+        return {
+          ...current,
+          ...p,
+          financialProfile: { ...defaultFinancialProfile, ...(p.financialProfile ?? {}) },
+          rentScenario: { ...defaultRentScenario, ...(p.rentScenario ?? {}) },
+          buyScenario: { ...defaultBuyScenario, ...(p.buyScenario ?? {}) },
+          buyScenario2: p.buyScenario2
+            ? { ...defaultBuyScenario, ...p.buyScenario2 }
+            : null,
+          settings: { ...current.settings, ...(p.settings ?? {}) },
+          savedScenarios: (p.savedScenarios ?? []).map((s) => ({
+            ...s,
+            financialProfile: { ...defaultFinancialProfile, ...s.financialProfile },
+            rentScenario: { ...defaultRentScenario, ...s.rentScenario },
+            buyScenario: { ...defaultBuyScenario, ...s.buyScenario },
+            buyScenario2: s.buyScenario2
+              ? { ...defaultBuyScenario, ...s.buyScenario2 }
+              : null,
+          })),
+        };
+      },
     }
   )
 );

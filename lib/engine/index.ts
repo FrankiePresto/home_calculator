@@ -70,6 +70,14 @@ export {
   type SankeyData,
 } from './cashflow';
 
+// Inflation adjustment
+export {
+  getDeflator,
+  deflateValue,
+  deflateSnapshot,
+  deflateProjection,
+} from './inflation';
+
 // Feasibility analysis
 export {
   analyzeFeasibility,

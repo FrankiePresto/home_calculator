@@ -10,7 +10,9 @@ import { calculateTotalTax, calculateHouseholdTax, SUPPORTED_PROVINCES, Province
 export function FinancialStep() {
   const profile = useStore((state) => state.financialProfile);
   const setProfile = useStore((state) => state.setFinancialProfile);
-  const [showAdvanced, setShowAdvanced] = useState(profile.includeTaxes || profile.useAdvancedSavings || false);
+  const [showAdvanced, setShowAdvanced] = useState(
+    profile.includeTaxes || profile.useAdvancedSavings || (profile.inflationRate != null && profile.inflationRate !== 2) || false
+  );
 
   // Calculate preview - Note: Housing costs are entered on the Rent step, so we only show expenses here
   const isDualIncome = profile.incomeType === 'dual' && profile.secondaryIncome > 0;
@@ -195,7 +197,7 @@ export function FinancialStep() {
             </div>
             <div>
               <span className="text-sm font-semibold text-foreground">Advanced Settings</span>
-              <p className="text-xs text-muted-foreground">Canadian taxes, HISA vs investment split</p>
+              <p className="text-xs text-muted-foreground">Inflation, Canadian taxes, HISA vs investment split</p>
             </div>
           </div>
           <ChevronRightIcon className={`w-5 h-5 text-accent transition-transform ${showAdvanced ? 'rotate-90' : ''}`} />
@@ -203,6 +205,27 @@ export function FinancialStep() {
 
         {showAdvanced && (
           <div className="mt-6 space-y-6">
+            {/* Inflation Rate */}
+            <div className="card p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-sm font-semibold text-foreground">Inflation Rate</span>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Applied to fixed costs (property tax, insurance, maintenance, utilities, living expenses). Set to 0% to disable.
+                  </p>
+                </div>
+                <PercentInput
+                  id="inflation-rate"
+                  label=""
+                  value={profile.inflationRate ?? 2}
+                  onChange={(value) => setProfile({ inflationRate: value })}
+                  min={0}
+                  max={10}
+                  step={0.5}
+                />
+              </div>
+            </div>
+
             {/* Tax Settings */}
             <div className="card p-4">
               <div className="flex items-center justify-between">

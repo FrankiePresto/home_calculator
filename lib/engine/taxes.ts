@@ -146,11 +146,17 @@ function getMarginalRate(taxableIncome: number, brackets: TaxBracket[]): number 
 
 /**
  * Calculate federal tax
+ *
+ * The Basic Personal Amount is a non-refundable tax credit applied at the
+ * lowest bracket rate (not a deduction from taxable income), so we compute
+ * gross-bracket tax and then subtract BPA × lowest_rate as a credit.
  */
 export function calculateFederalTax(grossIncome: number): number {
+  if (grossIncome <= 0) return 0;
   const bpa = getFederalBPA(grossIncome);
-  const taxableIncome = Math.max(0, grossIncome - bpa);
-  return calculateBracketTax(taxableIncome, FEDERAL_BRACKETS);
+  const taxBeforeCredit = calculateBracketTax(grossIncome, FEDERAL_BRACKETS);
+  const bpaCredit = bpa * FEDERAL_BRACKETS[0].rate;
+  return Math.max(0, taxBeforeCredit - bpaCredit);
 }
 
 /**
@@ -171,11 +177,15 @@ function getProvincialConfig(province: Province): { brackets: TaxBracket[]; bpa:
 
 /**
  * Calculate provincial tax
+ *
+ * BPA is a non-refundable credit at the lowest provincial bracket rate.
  */
 export function calculateProvincialTax(grossIncome: number, province: Province): number {
+  if (grossIncome <= 0) return 0;
   const { brackets, bpa } = getProvincialConfig(province);
-  const taxableIncome = Math.max(0, grossIncome - bpa);
-  return calculateBracketTax(taxableIncome, brackets);
+  const taxBeforeCredit = calculateBracketTax(grossIncome, brackets);
+  const bpaCredit = bpa * brackets[0].rate;
+  return Math.max(0, taxBeforeCredit - bpaCredit);
 }
 
 /**
@@ -188,14 +198,11 @@ export function calculateTotalTax(grossIncome: number, province: Province): TaxR
   const netIncome = grossIncome - total;
   const effectiveRate = grossIncome > 0 ? (total / grossIncome) * 100 : 0;
 
-  // Calculate combined marginal rate
-  const { brackets: provincialBrackets, bpa: provincialBPA } = getProvincialConfig(province);
-  const federalBPA = getFederalBPA(grossIncome);
-  const federalTaxableIncome = Math.max(0, grossIncome - federalBPA);
-  const provincialTaxableIncome = Math.max(0, grossIncome - provincialBPA);
-
-  const federalMarginal = getMarginalRate(federalTaxableIncome, FEDERAL_BRACKETS);
-  const provincialMarginal = getMarginalRate(provincialTaxableIncome, provincialBrackets);
+  // Marginal rate is the bracket the next dollar of gross income would fall into.
+  // (BPA is a credit, not a deduction, so it doesn't shift the bracket boundary.)
+  const { brackets: provincialBrackets } = getProvincialConfig(province);
+  const federalMarginal = getMarginalRate(grossIncome, FEDERAL_BRACKETS);
+  const provincialMarginal = getMarginalRate(grossIncome, provincialBrackets);
   const marginalRate = (federalMarginal + provincialMarginal) * 100;
 
   return {
