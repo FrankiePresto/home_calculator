@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useStore } from '@/lib/store';
 import { useWizard } from '@/components/wizard';
-import { ChartIcon } from '@/components/shared';
+import { ChartIcon, InfoTooltip } from '@/components/shared';
 import { HeroInsight } from './HeroInsight';
 import { FeasibilityWarnings } from './FeasibilityWarnings';
 import { NetWorthChart } from './NetWorthChart';
@@ -102,9 +102,9 @@ export function ResultsDashboard() {
         </nav>
       </div>
 
-      {/* Inflation toggle */}
+      {/* Inflation display toggle */}
       {inflationRate > 0 && (
-        <div className="flex items-center justify-end gap-3 px-1">
+        <div className="flex flex-wrap items-center justify-end gap-2 px-1">
           <label className="flex items-center gap-2 text-sm cursor-pointer">
             <input
               type="checkbox"
@@ -112,13 +112,17 @@ export function ResultsDashboard() {
               onChange={(e) => useStore.getState().setShowNominalDollars(e.target.checked)}
               className="checkbox"
             />
-            <span className="text-muted-foreground">
-              Show future dollar amounts
+            <span className="text-foreground">
+              Show inflation effect on amounts
             </span>
           </label>
-          <span className="text-xs text-muted-foreground bg-secondary px-2 py-1 rounded">
-            {showNominal ? 'Nominal dollars' : `Today\u2019s dollars (${inflationRate}% inflation)`}
-          </span>
+          <InfoTooltip
+            content={
+              `By default, every dollar amount is shown in today's value \u2014 adjusted for ${inflationRate}% annual inflation so you can compare them with prices you know now. ` +
+              `Check this box to instead see the raw numbers as they'll appear in each future year (e.g. a $2,500/mo rent today shown as roughly $4,500/mo by year 20). ` +
+              `Those numbers look bigger but represent the same buying power.`
+            }
+          />
         </div>
       )}
 
